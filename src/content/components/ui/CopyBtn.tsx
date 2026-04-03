@@ -1,0 +1,26 @@
+import { useState } from 'react'
+import { Copy, Check } from 'lucide-react'
+
+interface Props {
+  text: string
+}
+
+/** Clipboard copy button with brief "Copied!" feedback. */
+export function CopyBtn({ text }: Props) {
+  const [copied, setCopied] = useState(false)
+
+  return (
+    <button
+      className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm border border-qc-border text-qc-text-muted text-[11px] font-medium hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+      onClick={() =>
+        navigator.clipboard.writeText(text).then(() => {
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1500)
+        })
+      }
+    >
+      {copied ? <Check size={11} /> : <Copy size={11} />}
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
+}

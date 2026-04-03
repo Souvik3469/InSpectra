@@ -1,0 +1,91 @@
+/* ============================================================
+   QuickConsole — Panel Styles
+   Tailwind utilities are generated here (scoped to
+   #quickconsole-root via tailwind.config.js `important` option).
+   Only custom rules that Tailwind cannot express are kept below.
+   ============================================================ */
+
+@tailwind utilities;
+
+/* ── Root isolation ──────────────────────────────────────────
+   `all: initial` resets every inherited CSS property so the
+   host page's global styles cannot bleed into the panel.      */
+#quickconsole-root {
+  all: initial;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 2147483647;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #e6edf3;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Zero-specificity base so Tailwind utility classes always win */
+:where(#quickconsole-root *) {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+}
+
+#quickconsole-root button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+}
+
+#quickconsole-root input,
+#quickconsole-root select {
+  outline: none;
+  border: none;
+  background: none;
+}
+
+/* ── Thin scrollbars ─────────────────────────────────────────
+   ::-webkit-scrollbar pseudo-elements cannot be expressed as
+   Tailwind utilities, so they live here as a reusable class.  */
+.qc-scrollbar::-webkit-scrollbar       { width: 5px; }
+.qc-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.qc-scrollbar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+
+/* ── Recording-dot pulse animation ──────────────────────────
+   CSS animation — applied conditionally by NetworkTab.         */
+@keyframes qc-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.25); }
+  50%       { box-shadow: 0 0 0 4px rgba(248, 81, 73, 0.08); }
+}
+
+.qc-record-dot--active {
+  background: #f85149 !important;
+  box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.25);
+  animation: qc-pulse 1.4s ease-in-out infinite;
+}
+
+/* ── CodeMirror overrides ────────────────────────────────────
+   CM injects its own class names — we must target them here.  */
+.qc-editor .cm-editor {
+  height: 200px;
+  background: #0d1117 !important;
+}
+
+.qc-editor .cm-scroller {
+  font-family:
+    "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, "Courier New",
+    monospace !important;
+  font-size: 12.5px !important;
+  line-height: 1.6 !important;
+}
+
+.qc-editor .cm-gutters {
+  background: #0d1117 !important;
+  border-right-color: #30363d !important;
+}
