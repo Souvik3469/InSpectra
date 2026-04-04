@@ -1,10 +1,6 @@
 import { useRef, useCallback, useEffect } from 'react'
 import type React from 'react'
-
-interface Position {
-  x: number
-  y: number
-}
+import type { Position } from '../../shared/types'
 
 interface UseDraggableOptions {
   position: Position

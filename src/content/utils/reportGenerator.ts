@@ -2,7 +2,7 @@ import type { NetworkRequest } from "../../shared/types";
 
 // ── cURL builder (duplicated from DetailView to keep this util framework-free) ─
 
-function toCurl(req: NetworkRequest): string {
+export function toCurl(req: NetworkRequest): string {
   const parts = [`curl -X ${req.method} '${req.url}'`];
   Object.entries(req.requestHeaders ?? {}).forEach(([k, v]) => {
     parts.push(`  -H '${k}: ${v}'`);

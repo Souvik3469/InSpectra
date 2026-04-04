@@ -3,67 +3,12 @@ import { Trash2, Download } from "lucide-react";
 import { usePanelStore } from "../store";
 import { DetailView } from "./network/DetailView";
 import { downloadReport, downloadHar } from "../utils/reportGenerator";
+import { methodColor, statusColor, shortUrl, fmtMs } from "../utils/network";
 import type { NetworkRequest } from "../../shared/types";
 
-type MethodFilter =
-  | "ALL"
-  | "GET"
-  | "POST"
-  | "PUT"
-  | "DELETE"
-  | "PATCH"
-  | "OTHER";
+type MethodFilter = "ALL" | "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "OTHER";
 
-const METHOD_FILTERS: MethodFilter[] = [
-  "ALL",
-  "GET",
-  "POST",
-  "PUT",
-  "DELETE",
-  "PATCH",
-  "OTHER",
-];
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function methodColor(method: string) {
-  switch (method.toUpperCase()) {
-    case "GET":
-      return "text-qc-accent";
-    case "POST":
-      return "text-qc-success";
-    case "PUT":
-      return "text-qc-warn";
-    case "DELETE":
-      return "text-qc-error";
-    case "PATCH":
-      return "text-qc-return";
-    default:
-      return "text-qc-text-muted";
-  }
-}
-
-function statusColor(status?: number) {
-  if (!status) return "";
-  if (status < 300) return "text-qc-success";
-  if (status < 400) return "text-qc-info";
-  if (status < 500) return "text-qc-warn";
-  return "text-qc-error";
-}
-
-function fmtMs(ms?: number) {
-  if (ms == null) return "";
-  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
-}
-
-function shortUrl(url: string) {
-  try {
-    const u = new URL(url);
-    return u.pathname + (u.search || "");
-  } catch {
-    return url;
-  }
-}
+const METHOD_FILTERS: MethodFilter[] = ["ALL", "GET", "POST", "PUT", "DELETE", "PATCH", "OTHER"];
 
 // ── Main component ────────────────────────────────────────────────────────────
 

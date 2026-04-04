@@ -5,22 +5,14 @@ import type {
   Snippet,
   ConsoleOutput,
   NetworkRequest,
+  Position,
+  Size,
 } from "../../shared/types";
 import {
   MAX_OUTPUTS,
   MAX_NETWORK_REQUESTS,
   STORAGE_KEY,
 } from "../../shared/constants";
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface Size {
-  width: number;
-  height: number;
-}
 
 interface PanelStore {
   // ── Panel state ────────────────────────────────────────────────────────────

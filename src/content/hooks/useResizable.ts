@@ -1,9 +1,7 @@
 import { useRef, useCallback, useEffect } from 'react'
+import type { Position, Size } from '../../shared/types'
 
 export type ResizeHandle = 'e' | 's' | 'se'
-
-interface Size { width: number; height: number }
-interface Position { x: number; y: number }
 
 interface UseResizableOptions {
   size: Size

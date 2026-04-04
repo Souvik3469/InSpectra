@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import { usePanelStore } from './store'
 import Panel from './components/Panel'
-import { MSG_TOGGLE, QC_NETWORK, QC_NET_READY } from '../shared/constants'
+import { useNetworkMessages } from './hooks/useNetworkMessages'
+import { MSG_TOGGLE, QC_NET_READY } from '../shared/constants'
 import type { NetworkRequest } from '../shared/types'
 
 // Per-tab session storage key.
@@ -22,9 +23,7 @@ function stripBodies(r: NetworkRequest) {
 
 export default function App() {
   const toggle = usePanelStore((s) => s.toggle)
-  const isRecording = usePanelStore((s) => s.isRecording)
-  const addNetworkRequest = usePanelStore((s) => s.addNetworkRequest)
-  const updateNetworkRequest = usePanelStore((s) => s.updateNetworkRequest)
+  useNetworkMessages()
 
   // ── Per-tab session: restore → flush interceptor buffer → save on unload ──
   useEffect(() => {
@@ -65,36 +64,6 @@ export default function App() {
     chrome.runtime.onMessage.addListener(handler)
     return () => chrome.runtime.onMessage.removeListener(handler)
   }, [toggle])
-
-  // ── Network events from MAIN-world interceptor ────────────────────────────
-  useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.type !== QC_NETWORK) return
-      if (!isRecording) return
-
-      const d = e.data
-      if (d.event === 'req') {
-        addNetworkRequest({
-          id: d.id, method: d.method, url: d.url,
-          requestHeaders: d.reqHeaders ?? {},
-          requestBody: d.reqBody,
-          initiator: d.initiator,
-          timestamp: d.ts,
-          pending: true,
-        } as NetworkRequest)
-      } else if (d.event === 'res') {
-        updateNetworkRequest(d.id, {
-          status: d.status, statusText: d.statusText,
-          responseHeaders: d.resHeaders, responseBody: d.resBody,
-          duration: d.duration, pending: false,
-        })
-      } else if (d.event === 'err') {
-        updateNetworkRequest(d.id, { error: d.error, duration: d.duration, pending: false })
-      }
-    }
-    window.addEventListener('message', handler)
-    return () => window.removeEventListener('message', handler)
-  }, [isRecording, addNetworkRequest, updateNetworkRequest])
 
   return <Panel />
 }

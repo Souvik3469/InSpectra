@@ -1,5 +1,15 @@
 export type TabId = 'console' | 'snippets' | 'network'
 
+export interface Position {
+  x: number
+  y: number
+}
+
+export interface Size {
+  width: number
+  height: number
+}
+
 /**
  * A JSON-serializable tree node used for interactive object inspection.
  * Passed from pageExecutor → content script via window.postMessage.

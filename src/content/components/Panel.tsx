@@ -6,6 +6,7 @@ import Header from './Header'
 import ConsoleTab from './ConsoleTab'
 import SnippetsTab from './SnippetsTab'
 import NetworkTab from './NetworkTab'
+import { ResizeHandles } from './ResizeHandles'
 
 export default function Panel() {
   const { isVisible, isMinimized, position, setPosition, size, setSize, activeTab } = usePanelStore()
@@ -49,36 +50,7 @@ export default function Panel() {
         </div>
       )}
 
-      {/* Resize handles — only shown when not minimized */}
-      {!isMinimized && <>
-        {/* Right edge */}
-        <div
-          onMouseDown={startResize('e')}
-          style={{
-            position: 'absolute', top: 0, right: 0,
-            width: 5, height: '100%',
-            cursor: 'ew-resize',
-          }}
-        />
-        {/* Bottom edge */}
-        <div
-          onMouseDown={startResize('s')}
-          style={{
-            position: 'absolute', bottom: 0, left: 0,
-            width: '100%', height: 5,
-            cursor: 'ns-resize',
-          }}
-        />
-        {/* Bottom-right corner */}
-        <div
-          onMouseDown={startResize('se')}
-          style={{
-            position: 'absolute', bottom: 0, right: 0,
-            width: 14, height: 14,
-            cursor: 'nwse-resize',
-          }}
-        />
-      </>}
+      {!isMinimized && <ResizeHandles startResize={startResize} />}
     </div>
   )
 }
