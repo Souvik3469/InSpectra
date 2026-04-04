@@ -320,6 +320,29 @@ export function DetailView({ req, onClose }: Props) {
 
         {tab === 'request' && (
           <>
+            {/* General — full URL + method + status, selectable */}
+            <div className="px-3 pb-3 border-b border-qc-border">
+              <h4 className="text-[10.5px] font-semibold text-qc-text-muted uppercase tracking-[0.06em] py-1.5">General</h4>
+              <div className="flex flex-col gap-[5px]">
+                <div className="flex gap-2 text-[11px]">
+                  <span className="shrink-0 w-[88px] text-qc-text-subtle font-mono">Request URL</span>
+                  <span className="flex-1 text-qc-text font-mono break-all select-text">{req.url}</span>
+                </div>
+                <div className="flex gap-2 text-[11px]">
+                  <span className="shrink-0 w-[88px] text-qc-text-subtle font-mono">Method</span>
+                  <span className={`font-mono font-bold ${methodColor(req.method)}`}>{req.method}</span>
+                </div>
+                {req.status != null && (
+                  <div className="flex gap-2 text-[11px]">
+                    <span className="shrink-0 w-[88px] text-qc-text-subtle font-mono">Status</span>
+                    <span className={`font-mono font-semibold ${statusColor(req.status)}`}>
+                      {req.status}{req.statusText ? ` ${req.statusText}` : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             <div className="px-3 pb-2.5 border-b border-qc-border">
               <h4 className="text-[10.5px] font-semibold text-qc-text-muted uppercase tracking-[0.06em] py-1.5">
                 Request Headers
