@@ -8,12 +8,18 @@ interface Position {
   y: number
 }
 
+interface Size {
+  width: number
+  height: number
+}
+
 interface PanelStore {
   // ── Panel state ────────────────────────────────────────────────────────────
   isVisible: boolean
   isMinimized: boolean
   activeTab: TabId
   position: Position
+  size: Size
 
   // ── Console ────────────────────────────────────────────────────────────────
   editorCode: string
@@ -33,6 +39,7 @@ interface PanelStore {
   setMinimized: (v: boolean) => void
   setActiveTab: (tab: TabId) => void
   setPosition: (pos: Position) => void
+  setSize: (size: Size) => void
 
   setEditorCode: (code: string) => void
   addOutput: (output: ConsoleOutput) => void
@@ -73,6 +80,7 @@ export const usePanelStore = create<PanelStore>()(
       isMinimized: false,
       activeTab: 'console',
       position: { x: 20, y: 20 },
+      size: { width: 480, height: 520 },
 
       editorCode: INITIAL_CODE,
       outputs: [],
@@ -87,6 +95,7 @@ export const usePanelStore = create<PanelStore>()(
       setMinimized: (isMinimized) => set({ isMinimized }),
       setActiveTab: (activeTab) => set({ activeTab }),
       setPosition: (position) => set({ position }),
+      setSize: (size) => set({ size }),
 
       setEditorCode: (editorCode) => set({ editorCode }),
       addOutput: (output) =>
@@ -124,6 +133,7 @@ export const usePanelStore = create<PanelStore>()(
       // Everything here is global across tabs/sites (preferences + saved work)
       partialize: (state) => ({
         position: state.position,
+        size: state.size,
         isRecording: state.isRecording,
         editorCode: state.editorCode,
         snippets: state.snippets,
