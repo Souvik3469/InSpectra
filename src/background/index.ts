@@ -85,6 +85,38 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
   console.error = makeCapture('error') as typeof console.error
   console.info  = makeCapture('info') as typeof console.info
 
+  // ── REPL: transform let/const → var so top-level declarations persist on window ──
+  // Simple regex — best-effort, works for ~95% of real REPL usage.
+  var replCode = code.replace(/\b(let|const)\b/g, 'var')
+
+  // Snapshot window keys *before* any execution to detect newly declared vars.
+  // Include already-tracked REPL vars so they are not double-counted.
+  var _w = window as unknown as Record<string, unknown>
+  var _existing: string[] = (_w.__qcReplVars as string[] | undefined) || []
+  var _before = new Set(Object.keys(window).concat(_existing))
+
+  var needsAsync = /\bawait\b/.test(replCode)
+  var evalCode: string
+
+  if (needsAsync) {
+    // var inside an async IIFE is function-scoped → won't persist on window.
+    // Fix: extract simple `var name` declarations, pre-declare them globally,
+    // then strip `var` inside the IIFE so assignments target the global names.
+    // Limitation: comma-separated and destructured declarations are not lifted.
+    var lifted: string[] = []
+    var liftRe = /\bvar\s+([\w$]+)/g
+    var lm: RegExpExecArray | null
+    while ((lm = liftRe.exec(replCode)) !== null) lifted.push(lm[1])
+
+    var preDecls = lifted.length
+      ? lifted.map(function (n) { return 'var ' + n }).join('; ') + ';\n'
+      : ''
+    var innerCode = replCode.replace(/\bvar\s+([\w$]+)\b/g, '$1')
+    evalCode = preDecls + '(async function(){\n' + innerCode + '\n})()'
+  } else {
+    evalCode = replCode
+  }
+
   // Unified finish — called by both sync and async paths.
   // Console must be restored here (not in a finally block) so that
   // async console.log calls during Promise execution are still captured.
@@ -93,18 +125,29 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
     console.warn  = orig.warn
     console.error = orig.error
     console.info  = orig.info
+
+    // Detect vars added to window during this execution and accumulate them.
+    var _newVars = Object.keys(window).filter(function (k) {
+      return !_before.has(k) && k !== '__qcReplVars' && k.indexOf('__qc') !== 0
+    })
+    var _tracked: string[] = (_w.__qcReplVars as string[] | undefined) || []
+    if (_newVars.length) {
+      _w.__qcReplVars = _tracked.concat(
+        _newVars.filter(function (k) { return _tracked.indexOf(k) === -1 })
+      )
+    }
+
     window.postMessage(
-      { type: msgType, id: execId, result: { outputs: captured, returnValue: rv, error: err } },
+      {
+        type: msgType, id: execId,
+        result: {
+          outputs: captured, returnValue: rv, error: err,
+          replVars: (_w.__qcReplVars as string[] | undefined) || [],
+        },
+      },
       '*'
     )
   }
-
-  // Wrap in an async IIFE when the code uses top-level await or for...await.
-  // The browser console does this automatically; eval() does not.
-  // Also handles plain `fetch(...)` / `Promise.resolve()` — any thenable
-  // result is awaited so the resolved value is shown, not "Promise { <pending> }".
-  var needsAsync = /\bawait\b/.test(code)
-  var evalCode = needsAsync ? '(async function(){\n' + code + '\n})()' : code
 
   try {
     var result = (0, eval)(evalCode)  // indirect eval → global scope

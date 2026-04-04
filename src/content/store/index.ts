@@ -25,6 +25,7 @@ interface PanelStore {
   editorCode: string
   outputs: ConsoleOutput[]
   isExecuting: boolean
+  replVarCount: number
 
   // ── Snippets ───────────────────────────────────────────────────────────────
   snippets: Snippet[]
@@ -41,6 +42,7 @@ interface PanelStore {
   setPosition: (pos: Position) => void
   setSize: (size: Size) => void
 
+  setReplVarCount: (n: number) => void
   setEditorCode: (code: string) => void
   addOutput: (output: ConsoleOutput) => void
   clearOutputs: () => void
@@ -85,6 +87,7 @@ export const usePanelStore = create<PanelStore>()(
       editorCode: INITIAL_CODE,
       outputs: [],
       isExecuting: false,
+      replVarCount: 0,
 
       snippets: [],
       networkRequests: [],
@@ -97,6 +100,7 @@ export const usePanelStore = create<PanelStore>()(
       setPosition: (position) => set({ position }),
       setSize: (size) => set({ size }),
 
+      setReplVarCount: (replVarCount) => set({ replVarCount }),
       setEditorCode: (editorCode) => set({ editorCode }),
       addOutput: (output) =>
         set((s) => ({ outputs: [...s.outputs.slice(-(MAX_OUTPUTS - 1)), output] })),

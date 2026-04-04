@@ -2,15 +2,15 @@ import React, { useRef, useEffect, useCallback } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { Play, Trash2, Save } from 'lucide-react'
+import { Play, Trash2, Save, RotateCcw } from 'lucide-react'
 import { usePanelStore } from '../store'
 import { useCodeExecution } from '../hooks/useCodeExecution'
 import { uid } from '../utils/uid'
 import OutputLine from './OutputLine'
 
 export default function ConsoleTab() {
-  const { outputs, clearOutputs, addSnippet, editorCode, setEditorCode } = usePanelStore()
-  const { run, isExecuting } = useCodeExecution()
+  const { outputs, clearOutputs, addSnippet, editorCode, setEditorCode, replVarCount } = usePanelStore()
+  const { run, isExecuting, clearRepl } = useCodeExecution()
   const outputRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll output to bottom on new entries
@@ -86,7 +86,18 @@ export default function ConsoleTab() {
           Save
         </button>
 
-        <span className="flex-1 text-right text-[11px] text-qc-text-subtle">Ctrl+Enter to run</span>
+        <span className="flex-1" />
+
+        {replVarCount > 0 && (
+          <button
+            className="inline-flex items-center gap-1 px-2 py-[3px] rounded-qc-sm text-[11px] text-qc-text-subtle border border-qc-border hover:text-qc-text hover:border-qc-border-light transition-colors duration-[120ms]"
+            onClick={clearRepl}
+            title="Clear REPL state — delete all persisted variables"
+          >
+            <RotateCcw size={10} />
+            {replVarCount} var{replVarCount !== 1 ? 's' : ''}
+          </button>
+        )}
 
         <button
           className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"

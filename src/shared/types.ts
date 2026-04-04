@@ -38,4 +38,6 @@ export interface ExecutionResult {
   outputs: Array<{ type: ConsoleOutput['type']; values: string[] }>
   returnValue?: string
   error?: { message: string; stack?: string }
+  /** Names of variables currently live in the REPL scope (window.__qcReplVars) */
+  replVars?: string[]
 }

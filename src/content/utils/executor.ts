@@ -15,6 +15,18 @@ import { MSG_EXECUTE, MSG_RESULT, EXEC_PREFIX, EXECUTION_TIMEOUT_MS } from '../.
 
 let counter = 0
 
+/** Deletes all variables tracked in window.__qcReplVars, resetting REPL state. */
+export function clearReplState(): Promise<ExecutionResult> {
+  const clearScript = [
+    ';(function(){',
+    '  var vars = window.__qcReplVars || []',
+    '  vars.forEach(function(k){ try { delete window[k] } catch(e){} })',
+    '  window.__qcReplVars = []',
+    '})()',
+  ].join('\n')
+  return executeCode(clearScript)
+}
+
 export function executeCode(code: string): Promise<ExecutionResult> {
   return new Promise((resolve, reject) => {
     const id = `${EXEC_PREFIX}${Date.now()}_${counter++}`
