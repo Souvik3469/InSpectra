@@ -212,6 +212,7 @@ After each rebuild, go to `chrome://extensions` and click the reload icon on the
 
 ---
 
+<!--
 ## Contributing
 
 Contributions are welcome. The codebase is straightforward TypeScript + React — see `src/` for the structure and `.claude/CLAUDE.md` for architecture notes and design decisions.
@@ -228,6 +229,7 @@ src/
 ```
 
 ---
+-->
 
 ## License
 
