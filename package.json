@@ -1,5 +1,5 @@
 {
-  "name": "quickconsole",
+  "name": "inspectra",
   "version": "0.1.0",
   "description": "A floating DevTools-lite panel — run JS snippets, inspect network requests, and manage page scripts on any website",
   "private": true,

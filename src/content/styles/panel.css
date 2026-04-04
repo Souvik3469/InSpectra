@@ -1,7 +1,7 @@
 /* ============================================================
-   QuickConsole — Panel Styles
+   InSpectra — Panel Styles
    Tailwind utilities are generated here (scoped to
-   #quickconsole-root via tailwind.config.js `important` option).
+   #inspectra-root via tailwind.config.js `important` option).
    Only custom rules that Tailwind cannot express are kept below.
    ============================================================ */
 
@@ -10,7 +10,7 @@
 /* ── Root isolation ──────────────────────────────────────────
    `all: initial` resets every inherited CSS property so the
    host page's global styles cannot bleed into the panel.      */
-#quickconsole-root {
+#inspectra-root {
   all: initial;
   position: fixed;
   top: 0;
@@ -29,22 +29,22 @@
 }
 
 /* Zero-specificity base so Tailwind utility classes always win */
-:where(#quickconsole-root *) {
+:where(#inspectra-root *) {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   font-family: inherit;
 }
 
-#quickconsole-root button {
+#inspectra-root button {
   cursor: pointer;
   border: none;
   background: none;
   outline: none;
 }
 
-#quickconsole-root input,
-#quickconsole-root select {
+#inspectra-root input,
+#inspectra-root select {
   outline: none;
   border: none;
   background: none;
@@ -53,15 +53,27 @@
 /* ── Thin scrollbars ─────────────────────────────────────────
    ::-webkit-scrollbar pseudo-elements cannot be expressed as
    Tailwind utilities, so they live here as a reusable class.  */
-.qc-scrollbar::-webkit-scrollbar       { width: 5px; }
-.qc-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.qc-scrollbar::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
+.qc-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.qc-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.qc-scrollbar::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
 
 /* ── Recording-dot pulse animation ──────────────────────────
    CSS animation — applied conditionally by NetworkTab.         */
 @keyframes qc-pulse {
-  0%, 100% { box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.25); }
-  50%       { box-shadow: 0 0 0 4px rgba(248, 81, 73, 0.08); }
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(248, 81, 73, 0.08);
+  }
 }
 
 .qc-record-dot--active {

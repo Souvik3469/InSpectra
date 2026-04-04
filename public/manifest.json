@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "QuickConsole",
+  "name": "InSpectra",
   "version": "0.1.0",
   "description": "A floating DevTools-lite panel — run JS snippets, inspect network requests, and manage page scripts on any website.",
   "permissions": ["storage", "activeTab", "scripting"],
@@ -23,7 +23,7 @@
     }
   ],
   "action": {
-    "default_title": "Toggle QuickConsole",
+    "default_title": "Toggle InSpectra",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

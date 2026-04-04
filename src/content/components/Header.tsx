@@ -60,7 +60,7 @@ export default function Header({ onStartDrag }: Props) {
           />
         </svg>
         <span className="text-[12px] font-semibold text-qc-text tracking-[0.02em]">
-          QuickConsole
+          InSpectra
         </span>
       </div>
 

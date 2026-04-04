@@ -1,72 +1,100 @@
-import React, { useState, useRef } from 'react'
-import { Play, Trash2, Search, Code2, Pencil, Check, X, Download, Upload } from 'lucide-react'
-import { usePanelStore } from '../store'
-import { uid } from '../utils/uid'
-import type { Snippet } from '../../shared/types'
+import React, { useState, useRef } from "react";
+import {
+  Play,
+  Trash2,
+  Search,
+  Code2,
+  Pencil,
+  Check,
+  X,
+  Download,
+  Upload,
+} from "lucide-react";
+import { usePanelStore } from "../store";
+import { uid } from "../utils/uid";
+import type { Snippet } from "../../shared/types";
 
 function exportSnippets(snippets: Snippet[]) {
-  const blob = new Blob([JSON.stringify(snippets, null, 2)], { type: 'application/json' })
-  const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a')
-  a.href     = url
-  a.download = 'quickconsole-snippets.json'
-  a.click()
-  URL.revokeObjectURL(url)
+  const blob = new Blob([JSON.stringify(snippets, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "inspectra-snippets.json";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 export default function SnippetsTab() {
-  const { snippets, loadSnippetToEditor, deleteSnippet, updateSnippet, addSnippet } = usePanelStore()
-  const [search, setSearch]         = useState('')
-  const [editingId, setEditingId]   = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
-  const importRef = useRef<HTMLInputElement>(null)
+  const {
+    snippets,
+    loadSnippetToEditor,
+    deleteSnippet,
+    updateSnippet,
+    addSnippet,
+  } = usePanelStore();
+  const [search, setSearch] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
+  const importRef = useRef<HTMLInputElement>(null);
 
-  const query    = search.toLowerCase()
+  const query = search.toLowerCase();
   const filtered = query
-    ? snippets.filter((s) => s.name.toLowerCase().includes(query) || s.code.toLowerCase().includes(query))
-    : snippets
+    ? snippets.filter(
+        (s) =>
+          s.name.toLowerCase().includes(query) ||
+          s.code.toLowerCase().includes(query),
+      )
+    : snippets;
 
   function startEdit(snippet: Snippet) {
-    setEditingId(snippet.id)
-    setEditingName(snippet.name)
+    setEditingId(snippet.id);
+    setEditingName(snippet.name);
   }
 
   function commitEdit() {
-    if (editingId && editingName.trim()) updateSnippet(editingId, { name: editingName.trim() })
-    setEditingId(null)
-    setEditingName('')
+    if (editingId && editingName.trim())
+      updateSnippet(editingId, { name: editingName.trim() });
+    setEditingId(null);
+    setEditingName("");
   }
 
   function cancelEdit() {
-    setEditingId(null)
-    setEditingName('')
+    setEditingId(null);
+    setEditingName("");
   }
 
   function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
-        const data = JSON.parse(ev.target?.result as string) as Snippet[]
-        if (!Array.isArray(data)) throw new Error('Invalid format')
+        const data = JSON.parse(ev.target?.result as string) as Snippet[];
+        if (!Array.isArray(data)) throw new Error("Invalid format");
         data.forEach((s) => {
           if (s.name && s.code) {
-            addSnippet({ ...s, id: uid(), createdAt: s.createdAt ?? Date.now(), updatedAt: Date.now() })
+            addSnippet({
+              ...s,
+              id: uid(),
+              createdAt: s.createdAt ?? Date.now(),
+              updatedAt: Date.now(),
+            });
           }
-        })
-      } catch { /* silent — bad JSON or wrong shape */ }
-    }
-    reader.readAsText(file)
-    e.target.value = ''
+        });
+      } catch {
+        /* silent — bad JSON or wrong shape */
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-
       {/* Toolbar */}
       <div className="flex flex-col gap-1.5 px-2.5 py-2 border-b border-qc-border shrink-0">
-
         {/* Search */}
         <div className="flex items-center gap-2 px-2.5 py-1.5 bg-qc-surface-2 border border-qc-border rounded-qc-sm focus-within:border-qc-accent transition-colors duration-[120ms]">
           <Search size={13} className="text-qc-text-muted shrink-0" />
@@ -115,8 +143,8 @@ export default function SnippetsTab() {
             <Code2 size={36} strokeWidth={1.2} />
             <p className="text-[12px] max-w-[240px] leading-relaxed">
               {snippets.length === 0
-                ? 'No snippets yet.\nWrite code in the Console tab and click Save.'
-                : 'No snippets match your search.'}
+                ? "No snippets yet.\nWrite code in the Console tab and click Save."
+                : "No snippets match your search."}
             </p>
           </div>
         ) : (
@@ -135,8 +163,8 @@ export default function SnippetsTab() {
                       autoFocus
                       onChange={(e) => setEditingName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter')  commitEdit()
-                        if (e.key === 'Escape') cancelEdit()
+                        if (e.key === "Enter") commitEdit();
+                        if (e.key === "Escape") cancelEdit();
                       }}
                       onBlur={commitEdit}
                     />
@@ -186,7 +214,7 @@ export default function SnippetsTab() {
                     className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-error transition-colors duration-[120ms]"
                     onClick={() => {
                       if (window.confirm(`Delete snippet "${snippet.name}"?`)) {
-                        deleteSnippet(snippet.id)
+                        deleteSnippet(snippet.id);
                       }
                     }}
                     title="Delete snippet"
@@ -199,12 +227,12 @@ export default function SnippetsTab() {
               {/* Code preview */}
               <pre className="font-mono text-[11px] text-qc-text-muted whitespace-pre-wrap break-all leading-[1.55] max-h-[52px] overflow-hidden opacity-80">
                 {snippet.code.slice(0, 140)}
-                {snippet.code.length > 140 ? '…' : ''}
+                {snippet.code.length > 140 ? "…" : ""}
               </pre>
             </div>
           ))
         )}
       </div>
     </div>
-  )
+  );
 }
