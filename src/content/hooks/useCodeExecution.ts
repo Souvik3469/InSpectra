@@ -22,12 +22,12 @@ export function useCodeExecution() {
   const applyResult = useCallback(
     (result: Awaited<ReturnType<typeof executeCode>>) => {
       for (const entry of result.outputs) {
-        addOutput({ id: uid(), type: entry.type, values: entry.values, timestamp: Date.now() } as ConsoleOutput)
+        addOutput({ id: uid(), type: entry.type, values: entry.values, tree: entry.tree, timestamp: Date.now() } as ConsoleOutput)
       }
       if (result.error) {
         addOutput({ id: uid(), type: 'eval-error', values: [result.error.message, result.error.stack ?? ''].filter(Boolean), timestamp: Date.now() })
       } else if (result.returnValue !== undefined && result.returnValue !== 'undefined') {
-        addOutput({ id: uid(), type: 'return', values: [result.returnValue], timestamp: Date.now() })
+        addOutput({ id: uid(), type: 'return', values: [result.returnValue], tree: result.returnTree ? [result.returnTree] : undefined, timestamp: Date.now() })
       }
       if (result.replVars !== undefined) setReplVarCount(result.replVars.length)
     },

@@ -1,4 +1,5 @@
-import type { ConsoleOutput } from '../../shared/types'
+import type { ConsoleOutput, TreeNode } from '../../shared/types'
+import { ObjectTree } from './ObjectTree'
 
 const TYPE_PREFIX: Record<ConsoleOutput['type'], string> = {
   log:          '',
@@ -33,16 +34,19 @@ export default function OutputLine({ output }: Props) {
     >
       {prefix && <span className="shrink-0 opacity-75">{prefix}</span>}
 
-      <div className="flex-1 whitespace-pre-wrap">
-        {output.values.map((v, i) => (
-          <span
-            key={i}
-            className={isEvalError && i === 1 ? 'block text-[11px] text-qc-text-muted mt-[3px] opacity-70' : ''}
-          >
-            {i > 0 && !isEvalError && ' '}
-            {v}
-          </span>
-        ))}
+      <div className="flex-1 whitespace-pre-wrap min-w-0">
+        {output.tree && !isEvalError
+          ? <ObjectTree nodes={output.tree as TreeNode[]} />
+          : output.values.map((v, i) => (
+              <span
+                key={i}
+                className={isEvalError && i === 1 ? 'block text-[11px] text-qc-text-muted mt-[3px] opacity-70' : ''}
+              >
+                {i > 0 && !isEvalError && ' '}
+                {v}
+              </span>
+            ))
+        }
       </div>
     </div>
   )

@@ -34,7 +34,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 // ── pageExecutor (injected into page via chrome.scripting) ───────────────────
 // Must be self-contained — no imports, no closure references.
 function pageExecutor(code: string, execId: string, msgType: string): void {
-  var captured: Array<{ type: string; values: string[] }> = []
+  var captured: Array<{ type: string; values: string[]; tree: unknown[] }> = []
 
   function serialize(v: unknown, depth: number): string {
     depth = depth || 0
@@ -67,9 +67,70 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
     return String(v)
   }
 
+  // ── Structured tree serialiser (for interactive object inspector) ─────────
+  function shortVal(v: unknown): string {
+    if (v === null) return 'null'
+    if (v === undefined) return 'undefined'
+    if (typeof v === 'string') {
+      var s = JSON.stringify(v); return s.length > 16 ? s.slice(0, 15) + '…"' : s
+    }
+    if (typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint') return String(v)
+    if (Array.isArray(v)) return 'Array(' + v.length + ')'
+    if (typeof v === 'object') return '{…}'
+    return String(v)
+  }
+
+  function toTree(v: unknown, depth: number, seen: unknown[]): unknown {
+    if (v === null)      return { k: 'prim', v: 'null' }
+    if (v === undefined) return { k: 'prim', v: 'undefined' }
+    if (typeof v === 'function') return { k: 'prim', v: 'f ' + ((v as Function).name || 'anonymous') + '()' }
+    if (typeof v === 'symbol')  return { k: 'prim', v: (v as symbol).toString() }
+    if (typeof v === 'bigint')  return { k: 'prim', v: String(v) + 'n' }
+    if (typeof v === 'number' || typeof v === 'boolean') return { k: 'prim', v: String(v) }
+    if (typeof v === 'string')  return { k: 'str', v: v, q: JSON.stringify(v) }
+    if (v instanceof Error) return { k: 'err', msg: v.message, stack: v.stack }
+    if (v instanceof RegExp) return { k: 'prim', v: v.toString() }
+    if (v instanceof Date)   return { k: 'prim', v: v.toISOString() }
+
+    for (var si = 0; si < seen.length; si++) if (seen[si] === v) return { k: 'cut' }
+    if (depth >= 5) return { k: 'cut' }
+    seen.push(v)
+
+    var node: unknown
+    if (Array.isArray(v)) {
+      var CAP = 100
+      var its: unknown[] = []
+      for (var ai = 0; ai < Math.min(v.length, CAP); ai++) its.push(toTree(v[ai], depth + 1, seen))
+      var n = Math.min(3, v.length)
+      var pp: string[] = []; for (var pi = 0; pi < n; pi++) pp.push(shortVal(v[pi]))
+      var arrPrev = '(' + v.length + ') [' + pp.join(', ') + (v.length > n ? ', …' : '') + ']'
+      node = { k: 'arr', preview: arrPrev, items: its, extra: Math.max(0, v.length - CAP) }
+    } else {
+      try {
+        var CAP2 = 50, allKeys = Object.keys(v as object)
+        var okeys = allKeys.slice(0, CAP2)
+        var ents: [string, unknown][] = []
+        for (var oi = 0; oi < okeys.length; oi++) {
+          try { ents.push([okeys[oi], toTree((v as Record<string,unknown>)[okeys[oi]], depth + 1, seen)]) }
+          catch (_) { ents.push([okeys[oi], { k: 'prim', v: '[Error]' }]) }
+        }
+        var on = Math.min(3, okeys.length), op: string[] = []
+        for (var opi = 0; opi < on; opi++) op.push(okeys[opi] + ': ' + shortVal((v as Record<string,unknown>)[okeys[opi]]))
+        var objPrev = '{' + op.join(', ') + (okeys.length > on ? ', …' : '') + '}'
+        node = { k: 'obj', preview: objPrev, entries: ents, extra: Math.max(0, allKeys.length - CAP2) }
+      } catch (_) { node = { k: 'prim', v: '[Object]' } }
+    }
+    seen.pop()
+    return node
+  }
+
   function makeCapture(type: string) {
     return function (...args: unknown[]) {
-      captured.push({ type: type, values: args.map(function (a) { return serialize(a, 0) }) });
+      captured.push({
+        type: type,
+        values: args.map(function (a) { return serialize(a, 0) }),
+        tree: args.map(function (a) { return toTree(a, 0, []) }),
+      });
       (orig as Record<string, Function>)[type].apply(console, args)
     }
   }
@@ -120,7 +181,7 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
   // Unified finish — called by both sync and async paths.
   // Console must be restored here (not in a finally block) so that
   // async console.log calls during Promise execution are still captured.
-  function finish(rv: string | undefined, err: { message: string; stack?: string } | undefined) {
+  function finish(rv: string | undefined, rvTree: unknown, err: { message: string; stack?: string } | undefined) {
     console.log   = orig.log
     console.warn  = orig.warn
     console.error = orig.error
@@ -141,7 +202,7 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
       {
         type: msgType, id: execId,
         result: {
-          outputs: captured, returnValue: rv, error: err,
+          outputs: captured, returnValue: rv, returnTree: rvTree, error: err,
           replVars: (_w.__qcReplVars as string[] | undefined) || [],
         },
       },
@@ -156,17 +217,17 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
     // stay alive until it settles — console capture remains active throughout.
     if (result !== null && result !== undefined && typeof (result as any).then === 'function') {
       ;(result as Promise<unknown>)
-        .then(function (val: unknown) { finish(serialize(val, 0), undefined) })
+        .then(function (val: unknown) { finish(serialize(val, 0), toTree(val, 0, []), undefined) })
         .catch(function (e: unknown) {
           var ex = e as Error
-          finish(undefined, { message: ex.message, stack: ex.stack })
+          finish(undefined, undefined, { message: ex.message, stack: ex.stack })
         })
       return  // postMessage will be sent from the Promise callbacks above
     }
 
-    finish(serialize(result, 0), undefined)
+    finish(serialize(result, 0), toTree(result, 0, []), undefined)
   } catch (e: unknown) {
     var ex = e as Error
-    finish(undefined, { message: ex.message, stack: ex.stack })
+    finish(undefined, undefined, { message: ex.message, stack: ex.stack })
   }
 }
