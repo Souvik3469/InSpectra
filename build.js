@@ -66,7 +66,7 @@ const sharedBuild = {
   outDir: distDir,
   emptyOutDir: false,
   minify: !isWatch,
-  sourcemap: isWatch ? 'inline' : false,
+  sourcemap: isWatch ? true : false,
   rollupOptions: { output: { inlineDynamicImports: true } },
 }
 

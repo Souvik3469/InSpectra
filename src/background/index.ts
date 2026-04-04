@@ -1,4 +1,4 @@
-import { MSG_TOGGLE, MSG_EXECUTE, MSG_RESULT, MSG_DEV_RELOAD } from '../shared/constants'
+import { MSG_TOGGLE, MSG_EXECUTE, MSG_RESULT } from '../shared/constants'
 
 // ── Toolbar icon click → toggle panel ────────────────────────────────────────
 chrome.action.onClicked.addListener((tab) => {
@@ -6,31 +6,8 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, { type: MSG_TOGGLE }).catch(() => {})
 })
 
-// ── Dev: after chrome.runtime.reload() restart, reload the tab that triggered it
-// chrome.storage.session survives runtime.reload() (scoped to browser session, not SW lifetime)
-if (__DEV__) {
-  chrome.storage.session.get(['devReloadTabId']).then(({ devReloadTabId }: { devReloadTabId?: number }) => {
-    if (devReloadTabId) {
-      chrome.storage.session.remove(['devReloadTabId'])
-      setTimeout(() => chrome.tabs.reload(devReloadTabId as number).catch(() => {}), 300)
-    }
-  })
-}
-
-// ── Content script execution requests + dev reload ───────────────────────────
+// ── Content script execution requests ────────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  // Dev-only: content script detects a rebuild via version.txt polling
-  if (msg.type === MSG_DEV_RELOAD) {
-    const tabId = sender.tab?.id
-    if (tabId) {
-      // Store tab ID before reloading — background startup will pick it up and reload the tab
-      chrome.storage.session.set({ devReloadTabId: tabId }).then(() => chrome.runtime.reload())
-    } else {
-      chrome.runtime.reload()
-    }
-    return
-  }
-
   if (msg.type !== MSG_EXECUTE) return
 
   const tabId = sender.tab?.id
