@@ -17,6 +17,7 @@ export function useCodeExecution() {
   const setExecuting    = usePanelStore((s) => s.setExecuting)
   const addOutput       = usePanelStore((s) => s.addOutput)
   const setReplVarCount = usePanelStore((s) => s.setReplVarCount)
+  const addToHistory    = usePanelStore((s) => s.addToHistory)
 
   const applyResult = useCallback(
     (result: Awaited<ReturnType<typeof executeCode>>) => {
@@ -33,8 +34,10 @@ export function useCodeExecution() {
     [addOutput, setReplVarCount],
   )
 
-  const run = useCallback(async () => {
+  const run = useCallback(async (onRun?: () => void) => {
     if (isExecuting || !editorCode.trim()) return
+    addToHistory(editorCode)
+    onRun?.()
     setExecuting(true)
     try {
       applyResult(await executeCode(editorCode))
@@ -43,7 +46,7 @@ export function useCodeExecution() {
     } finally {
       setExecuting(false)
     }
-  }, [editorCode, isExecuting, addOutput, setExecuting, applyResult])
+  }, [editorCode, isExecuting, addOutput, setExecuting, applyResult, addToHistory])
 
   const clearRepl = useCallback(async () => {
     if (isExecuting) return

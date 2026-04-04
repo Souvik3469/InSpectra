@@ -5,12 +5,14 @@ import { oneDark } from '@codemirror/theme-one-dark'
 import { Play, Trash2, Save, RotateCcw } from 'lucide-react'
 import { usePanelStore } from '../store'
 import { useCodeExecution } from '../hooks/useCodeExecution'
+import { useExecutionHistory } from '../hooks/useExecutionHistory'
 import { uid } from '../utils/uid'
 import OutputLine from './OutputLine'
 
 export default function ConsoleTab() {
-  const { outputs, clearOutputs, addSnippet, editorCode, setEditorCode, replVarCount } = usePanelStore()
+  const { outputs, clearOutputs, addSnippet, editorCode, replVarCount } = usePanelStore()
   const { run, isExecuting, clearRepl } = useCodeExecution()
+  const { historyExtension, handleChange, resetIndex, historyLength } = useExecutionHistory()
   const outputRef = useRef<HTMLDivElement>(null)
 
   // Auto-scroll output to bottom on new entries
@@ -31,10 +33,10 @@ export default function ConsoleTab() {
     (e: React.KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault()
-        run()
+        run(resetIndex)
       }
     },
-    [run],
+    [run, resetIndex],
   )
 
   return (
@@ -44,8 +46,8 @@ export default function ConsoleTab() {
       <div className="qc-editor shrink-0 border-b border-qc-border">
         <CodeMirror
           value={editorCode}
-          onChange={setEditorCode}
-          extensions={[javascript({ jsx: true, typescript: true })]}
+          onChange={handleChange}
+          extensions={[javascript({ jsx: true, typescript: true }), historyExtension]}
           theme={oneDark}
           height="200px"
           basicSetup={{
@@ -69,7 +71,7 @@ export default function ConsoleTab() {
       <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-qc-surface border-b border-qc-border shrink-0">
         <button
           className="inline-flex items-center gap-[5px] px-3 py-[5px] bg-qc-accent text-qc-bg rounded-qc-sm text-[12px] font-semibold border border-qc-accent hover:bg-qc-accent-hover hover:border-qc-accent-hover disabled:opacity-55 disabled:cursor-not-allowed transition-colors duration-[120ms]"
-          onClick={run}
+          onClick={() => run(resetIndex)}
           disabled={isExecuting}
           title="Run (Ctrl+Enter)"
         >
@@ -87,6 +89,12 @@ export default function ConsoleTab() {
         </button>
 
         <span className="flex-1" />
+
+        {historyLength > 0 && (
+          <span className="text-[11px] text-qc-text-muted" title="Use ↑ ↓ on first/last line to navigate history">
+            ↑ {historyLength}
+          </span>
+        )}
 
         {replVarCount > 0 && (
           <button

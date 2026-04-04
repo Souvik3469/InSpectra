@@ -26,6 +26,7 @@ interface PanelStore {
   outputs: ConsoleOutput[]
   isExecuting: boolean
   replVarCount: number
+  execHistory: string[]
 
   // ── Snippets ───────────────────────────────────────────────────────────────
   snippets: Snippet[]
@@ -44,6 +45,7 @@ interface PanelStore {
 
   setReplVarCount: (n: number) => void
   setEditorCode: (code: string) => void
+  addToHistory: (code: string) => void
   addOutput: (output: ConsoleOutput) => void
   clearOutputs: () => void
   setExecuting: (v: boolean) => void
@@ -88,6 +90,7 @@ export const usePanelStore = create<PanelStore>()(
       outputs: [],
       isExecuting: false,
       replVarCount: 0,
+      execHistory: [],
 
       snippets: [],
       networkRequests: [],
@@ -102,6 +105,11 @@ export const usePanelStore = create<PanelStore>()(
 
       setReplVarCount: (replVarCount) => set({ replVarCount }),
       setEditorCode: (editorCode) => set({ editorCode }),
+      addToHistory: (code) => set((s) => {
+        const trimmed = code.trim()
+        if (!trimmed || s.execHistory[0] === trimmed) return s
+        return { execHistory: [trimmed, ...s.execHistory].slice(0, 50) }
+      }),
       addOutput: (output) =>
         set((s) => ({ outputs: [...s.outputs.slice(-(MAX_OUTPUTS - 1)), output] })),
       clearOutputs: () => set({ outputs: [] }),
