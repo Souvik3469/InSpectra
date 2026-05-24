@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react'
+import React, { useRef, useEffect, useCallback, useMemo } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { javascript } from '@codemirror/lang-javascript'
 import { oneDark } from '@codemirror/theme-one-dark'
@@ -14,6 +14,13 @@ export default function ConsoleTab() {
   const { run, isExecuting, clearRepl } = useCodeExecution()
   const { historyExtension, handleChange, resetIndex, historyLength } = useExecutionHistory()
   const outputRef = useRef<HTMLDivElement>(null)
+
+  // Memoised so CodeMirror doesn't see a new array reference on every render,
+  // which would cause it to teardown and reinitialise its extension pipeline.
+  const extensions = useMemo(
+    () => [javascript({ jsx: true, typescript: true }), historyExtension],
+    [historyExtension],
+  )
 
   // Auto-scroll output to bottom on new entries
   useEffect(() => {
@@ -47,7 +54,7 @@ export default function ConsoleTab() {
         <CodeMirror
           value={editorCode}
           onChange={handleChange}
-          extensions={[javascript({ jsx: true, typescript: true }), historyExtension]}
+          extensions={extensions}
           theme={oneDark}
           height="200px"
           basicSetup={{

@@ -13,10 +13,12 @@ export function CopyBtn({ text }: Props) {
     <button
       className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm border border-qc-border text-qc-text-muted text-[11px] font-medium hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
       onClick={() =>
-        navigator.clipboard.writeText(text).then(() => {
-          setCopied(true)
-          setTimeout(() => setCopied(false), 1500)
-        })
+        navigator.clipboard.writeText(text)
+          .then(() => {
+            setCopied(true)
+            setTimeout(() => setCopied(false), 1500)
+          })
+          .catch(() => { /* clipboard access denied — no-op */ })
       }
     >
       {copied ? <Check size={11} /> : <Copy size={11} />}

@@ -198,6 +198,11 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
       )
     }
 
+    // Scope to current origin so execution results (which may contain sensitive
+    // page data) are not readable by cross-origin iframes on the same page.
+    // Falls back to '*' only on origins where window.location.origin is 'null'
+    // (e.g. file:// pages), where scoping is not possible.
+    var targetOrigin = window.location.origin !== 'null' ? window.location.origin : '*'
     window.postMessage(
       {
         type: msgType, id: execId,
@@ -206,7 +211,7 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
           replVars: (_w.__qcReplVars as string[] | undefined) || [],
         },
       },
-      '*'
+      targetOrigin
     )
   }
 
@@ -215,7 +220,7 @@ function pageExecutor(code: string, execId: string, msgType: string): void {
 
     // If the result is a Promise (async IIFE, or code that returns fetch/Promise directly)
     // stay alive until it settles — console capture remains active throughout.
-    if (result !== null && result !== undefined && typeof (result as any).then === 'function') {
+    if (result !== null && result !== undefined && typeof (result as Record<string, unknown>)['then'] === 'function') {
       ;(result as Promise<unknown>)
         .then(function (val: unknown) { finish(serialize(val, 0), toTree(val, 0, []), undefined) })
         .catch(function (e: unknown) {

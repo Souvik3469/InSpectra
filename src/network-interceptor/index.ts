@@ -21,15 +21,17 @@ function genId() { return `qcn_${Date.now()}_${_counter++}` }
 const _buf: Record<string, unknown>[] = []
 let _ready = false
 
+const _origin = window.location.origin !== 'null' ? window.location.origin : '*'
+
 function post(data: Record<string, unknown>) {
-  if (_ready) window.postMessage(data, '*')
+  if (_ready) window.postMessage(data, _origin)
   else _buf.push(data)
 }
 
 window.addEventListener('message', (e: MessageEvent) => {
   if (e.data?.type === QC_NET_READY && !_ready) {
     _ready = true
-    _buf.splice(0).forEach((d) => window.postMessage(d, '*'))
+    _buf.splice(0).forEach((d) => window.postMessage(d, _origin))
   }
 })
 

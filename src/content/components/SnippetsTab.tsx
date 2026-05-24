@@ -37,6 +37,7 @@ export default function SnippetsTab() {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
 
   const query = search.toLowerCase();
@@ -84,7 +85,8 @@ export default function SnippetsTab() {
           }
         });
       } catch {
-        /* silent — bad JSON or wrong shape */
+        setImportError('Import failed: invalid JSON format')
+        setTimeout(() => setImportError(null), 3000)
       }
     };
     reader.readAsText(file);
@@ -134,6 +136,10 @@ export default function SnippetsTab() {
             onChange={handleImport}
           />
         </div>
+
+        {importError && (
+          <p className="text-[11px] text-qc-error px-1">{importError}</p>
+        )}
       </div>
 
       {/* Snippet list */}

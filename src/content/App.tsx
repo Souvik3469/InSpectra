@@ -40,7 +40,8 @@ export default function App() {
     // Signal the MAIN-world interceptor to flush its pre-mount buffer.
     // The interceptor queues every fetch/XHR event that fired before this
     // signal so nothing is lost during the document_start → document_idle gap.
-    window.postMessage({ type: QC_NET_READY }, '*')
+    const _origin = window.location.origin !== 'null' ? window.location.origin : '*'
+    window.postMessage({ type: QC_NET_READY }, _origin)
 
     // Save per-tab state on navigation away from this page
     const handleUnload = () => {
