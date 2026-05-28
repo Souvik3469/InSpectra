@@ -124,6 +124,15 @@ Use the Console tab to poke around — explore what's on `window`, inspect the s
 
 ## Installation
 
+### Quick Install (no build step)
+
+1. Go to the [Releases](https://github.com/Souvik3469/QuickConsole/releases/latest) page and download `inspectra.zip`
+2. Unzip it — you'll get a `dist/` folder
+3. Open Chrome and go to `chrome://extensions`
+4. Enable **Developer mode** (toggle in the top-right corner)
+5. Click **Load unpacked** and select the `dist/` folder
+6. Pin the InSpectra icon in your toolbar
+
 ### From Source
 
 1. Clone the repository
