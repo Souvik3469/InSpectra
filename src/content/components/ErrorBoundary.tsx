@@ -18,7 +18,7 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center h-full p-4 text-qc-error text-[12px] text-center leading-relaxed">
+        <div className="flex items-center justify-center h-full p-4 text-insp-error text-[12px] text-center leading-relaxed">
           Panel encountered an error.
           <br />
           Reload the page to reset.

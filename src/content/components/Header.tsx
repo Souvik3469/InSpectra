@@ -24,7 +24,7 @@ export default function Header({ onStartDrag }: Props) {
 
   return (
     <div
-      className="flex items-center gap-1.5 h-10 pl-3 pr-2 bg-qc-surface border-b border-qc-border cursor-grab active:cursor-grabbing shrink-0 select-none"
+      className="flex items-center gap-1.5 h-10 pl-3 pr-2 bg-insp-surface border-b border-insp-border cursor-grab active:cursor-grabbing shrink-0 select-none"
       onMouseDown={onStartDrag}
     >
       {/* Logo */}
@@ -59,7 +59,7 @@ export default function Header({ onStartDrag }: Props) {
             strokeLinecap="round"
           />
         </svg>
-        <span className="text-[12px] font-semibold text-qc-text tracking-[0.02em]">
+        <span className="text-[12px] font-semibold text-insp-text tracking-[0.02em]">
           InSpectra
         </span>
       </div>
@@ -72,10 +72,10 @@ export default function Header({ onStartDrag }: Props) {
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
-            className={`inline-flex items-center gap-[5px] px-[9px] py-1 rounded-qc-sm text-[11.5px] font-medium whitespace-nowrap select-none transition-colors duration-[120ms] ${
+            className={`inline-flex items-center gap-[5px] px-[9px] py-1 rounded-insp-sm text-[11.5px] font-medium whitespace-nowrap select-none transition-colors duration-[120ms] ${
               activeTab === id
-                ? "text-qc-accent bg-[rgba(88,166,255,0.1)]"
-                : "text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2"
+                ? "text-insp-accent bg-[rgba(88,166,255,0.1)]"
+                : "text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2"
             }`}
             onClick={() => {
               setActiveTab(id);
@@ -95,14 +95,14 @@ export default function Header({ onStartDrag }: Props) {
         onMouseDown={(e) => e.stopPropagation()}
       >
         <button
-          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
           onClick={() => setMinimized(!isMinimized)}
           title={isMinimized ? "Restore" : "Minimize"}
         >
           <Minus size={13} />
         </button>
         <button
-          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-error hover:bg-[rgba(248,81,73,0.12)] transition-colors duration-[120ms]"
+          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-error hover:bg-[rgba(248,81,73,0.12)] transition-colors duration-[120ms]"
           onClick={() => setVisible(false)}
           title="Close (click toolbar icon to reopen)"
         >

@@ -2,21 +2,21 @@
 
 export function methodColor(method: string): string {
   switch (method.toUpperCase()) {
-    case 'GET':    return 'text-qc-accent'
-    case 'POST':   return 'text-qc-success'
-    case 'PUT':    return 'text-qc-warn'
-    case 'DELETE': return 'text-qc-error'
-    case 'PATCH':  return 'text-qc-return'
-    default:       return 'text-qc-text-muted'
+    case 'GET':    return 'text-insp-accent'
+    case 'POST':   return 'text-insp-success'
+    case 'PUT':    return 'text-insp-warn'
+    case 'DELETE': return 'text-insp-error'
+    case 'PATCH':  return 'text-insp-return'
+    default:       return 'text-insp-text-muted'
   }
 }
 
 export function statusColor(status?: number): string {
   if (!status) return ''
-  if (status < 300) return 'text-qc-success'
-  if (status < 400) return 'text-qc-info'
-  if (status < 500) return 'text-qc-warn'
-  return 'text-qc-error'
+  if (status < 300) return 'text-insp-success'
+  if (status < 400) return 'text-insp-info'
+  if (status < 500) return 'text-insp-warn'
+  return 'text-insp-error'
 }
 
 export function shortUrl(url: string): string {

@@ -200,7 +200,7 @@ export function downloadReport(
 ): void {
   triggerDownload(
     reportToJson(reqs),
-    filename ?? `qc-report-${stem()}.json`,
+    filename ?? `inspectra-report-${stem()}.json`,
     "application/json",
   );
 }
@@ -209,7 +209,7 @@ export function downloadReport(
 export function downloadHar(reqs: NetworkRequest[], filename?: string): void {
   triggerDownload(
     harToJson(reqs),
-    filename ?? `qc-report-${stem()}.har`,
+    filename ?? `inspectra-report-${stem()}.har`,
     "application/json",
   );
 }

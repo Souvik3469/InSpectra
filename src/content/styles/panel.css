@@ -53,20 +53,20 @@
 /* ── Thin scrollbars ─────────────────────────────────────────
    ::-webkit-scrollbar pseudo-elements cannot be expressed as
    Tailwind utilities, so they live here as a reusable class.  */
-.qc-scrollbar::-webkit-scrollbar {
+.insp-scrollbar::-webkit-scrollbar {
   width: 5px;
 }
-.qc-scrollbar::-webkit-scrollbar-track {
+.insp-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
-.qc-scrollbar::-webkit-scrollbar-thumb {
+.insp-scrollbar::-webkit-scrollbar-thumb {
   background: #30363d;
   border-radius: 3px;
 }
 
 /* ── Recording-dot pulse animation ──────────────────────────
    CSS animation — applied conditionally by NetworkTab.         */
-@keyframes qc-pulse {
+@keyframes insp-pulse {
   0%,
   100% {
     box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.25);
@@ -76,20 +76,20 @@
   }
 }
 
-.qc-record-dot--active {
+.insp-record-dot--active {
   background: #f85149 !important;
   box-shadow: 0 0 0 2px rgba(248, 81, 73, 0.25);
-  animation: qc-pulse 1.4s ease-in-out infinite;
+  animation: insp-pulse 1.4s ease-in-out infinite;
 }
 
 /* ── CodeMirror overrides ────────────────────────────────────
    CM injects its own class names — we must target them here.  */
-.qc-editor .cm-editor {
+.insp-editor .cm-editor {
   height: 200px;
   background: #0d1117 !important;
 }
 
-.qc-editor .cm-scroller {
+.insp-editor .cm-scroller {
   font-family:
     "JetBrains Mono", "Fira Code", "Cascadia Code", Consolas, "Courier New",
     monospace !important;
@@ -97,7 +97,7 @@
   line-height: 1.6 !important;
 }
 
-.qc-editor .cm-gutters {
+.insp-editor .cm-gutters {
   background: #0d1117 !important;
   border-right-color: #30363d !important;
 }

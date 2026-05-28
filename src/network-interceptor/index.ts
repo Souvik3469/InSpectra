@@ -4,18 +4,18 @@
  *
  * Two key behaviours:
  *   1. BUFFER — events are queued until the content script signals it is ready
- *      (via QC_NET_READY). This means requests fired during page load — before
+ *      (via IS_NET_READY). This means requests fired during page load — before
  *      the React panel has mounted — are never lost.
  *   2. INITIATOR — each request captures a trimmed stack-trace frame so the
  *      Network tab can show which file:line triggered the request.
  */
 
-import { QC_NETWORK, QC_NET_READY } from '../shared/constants'
+import { IS_NETWORK, IS_NET_READY } from '../shared/constants'
 
 const MAX_BODY = 50_000
 
 let _counter = 0
-function genId() { return `qcn_${Date.now()}_${_counter++}` }
+function genId() { return `isn_${Date.now()}_${_counter++}` }
 
 // ── Buffer: hold events until content script is ready ────────────────────────
 const _buf: Record<string, unknown>[] = []
@@ -29,7 +29,7 @@ function post(data: Record<string, unknown>) {
 }
 
 window.addEventListener('message', (e: MessageEvent) => {
-  if (e.data?.type === QC_NET_READY && !_ready) {
+  if (e.data?.type === IS_NET_READY && !_ready) {
     _ready = true
     _buf.splice(0).forEach((d) => window.postMessage(d, _origin))
   }
@@ -80,13 +80,13 @@ function bodyToStr(b: BodyInit | null | undefined): string | undefined {
 }
 
 // Guard: prevent double-wrapping on SPA navigations that re-inject the script
-if (!(window as any).__qcNetActive) {
-  ;(window as any).__qcNetActive = true
+if (!(window as any).__isNetActive) {
+  ;(window as any).__isNetActive = true
 
   // ── Intercept fetch ────────────────────────────────────────────────────────
   const _origFetch = window.fetch.bind(window)
 
-  window.fetch = async function qcFetch(
+  window.fetch = async function isFetch(
     input: RequestInfo | URL,
     init?: RequestInit,
   ): Promise<Response> {
@@ -107,7 +107,7 @@ if (!(window as any).__qcNetActive) {
 
     const id = genId()
     const t0 = Date.now()
-    post({ type: QC_NETWORK, event: 'req', id, method, url, reqHeaders, reqBody, initiator, ts: t0 })
+    post({ type: IS_NETWORK, event: 'req', id, method, url, reqHeaders, reqBody, initiator, ts: t0 })
 
     try {
       const resp = await _origFetch(input, init)
@@ -115,10 +115,10 @@ if (!(window as any).__qcNetActive) {
       const resHeaders = headersToRecord(resp.headers)
       let resBody: string | undefined
       try { resBody = (await resp.clone().text()).slice(0, MAX_BODY) } catch { /* binary */ }
-      post({ type: QC_NETWORK, event: 'res', id, status: resp.status, statusText: resp.statusText, resHeaders, resBody, duration })
+      post({ type: IS_NETWORK, event: 'res', id, status: resp.status, statusText: resp.statusText, resHeaders, resBody, duration })
       return resp
     } catch (err) {
-      post({ type: QC_NETWORK, event: 'err', id, error: String(err), duration: Date.now() - t0 })
+      post({ type: IS_NETWORK, event: 'err', id, error: String(err), duration: Date.now() - t0 })
       throw err
     }
   }
@@ -126,7 +126,7 @@ if (!(window as any).__qcNetActive) {
   // ── Intercept XMLHttpRequest ───────────────────────────────────────────────
   const OrigXHR = window.XMLHttpRequest
 
-  class QCXHR extends OrigXHR {
+  class ISXHR extends OrigXHR {
     private _id = genId()
     private _method = 'GET'
     private _url = ''
@@ -151,7 +151,7 @@ if (!(window as any).__qcNetActive) {
       this._initiator = getInitiator()
       const reqBody = body != null ? String(body).slice(0, MAX_BODY) : undefined
 
-      post({ type: QC_NETWORK, event: 'req', id: this._id, method: this._method, url: this._url, reqHeaders: { ...this._reqH }, reqBody, initiator: this._initiator, ts: this._t0 })
+      post({ type: IS_NETWORK, event: 'req', id: this._id, method: this._method, url: this._url, reqHeaders: { ...this._reqH }, reqBody, initiator: this._initiator, ts: this._t0 })
 
       this.addEventListener('load', () => {
         const resHeaders: Record<string, string> = {}
@@ -161,11 +161,11 @@ if (!(window as any).__qcNetActive) {
         })
         let resBody: string | undefined
         try { if (typeof this.responseText === 'string') resBody = this.responseText.slice(0, MAX_BODY) } catch { /* ignore */ }
-        post({ type: QC_NETWORK, event: 'res', id: this._id, status: this.status, statusText: this.statusText, resHeaders, resBody, duration: Date.now() - this._t0 })
+        post({ type: IS_NETWORK, event: 'res', id: this._id, status: this.status, statusText: this.statusText, resHeaders, resBody, duration: Date.now() - this._t0 })
       })
 
       const onFail = (kind: string) => () =>
-        post({ type: QC_NETWORK, event: 'err', id: this._id, error: kind, duration: Date.now() - this._t0 })
+        post({ type: IS_NETWORK, event: 'err', id: this._id, error: kind, duration: Date.now() - this._t0 })
 
       this.addEventListener('error', onFail('Network error'))
       this.addEventListener('abort', onFail('Request aborted'))
@@ -174,5 +174,5 @@ if (!(window as any).__qcNetActive) {
     }
   }
 
-  window.XMLHttpRequest = QCXHR as typeof XMLHttpRequest
+  window.XMLHttpRequest = ISXHR as typeof XMLHttpRequest
 }

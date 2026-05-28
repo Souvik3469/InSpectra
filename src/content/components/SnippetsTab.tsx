@@ -96,12 +96,12 @@ export default function SnippetsTab() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Toolbar */}
-      <div className="flex flex-col gap-1.5 px-2.5 py-2 border-b border-qc-border shrink-0">
+      <div className="flex flex-col gap-1.5 px-2.5 py-2 border-b border-insp-border shrink-0">
         {/* Search */}
-        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-qc-surface-2 border border-qc-border rounded-qc-sm focus-within:border-qc-accent transition-colors duration-[120ms]">
-          <Search size={13} className="text-qc-text-muted shrink-0" />
+        <div className="flex items-center gap-2 px-2.5 py-1.5 bg-insp-surface-2 border border-insp-border rounded-insp-sm focus-within:border-insp-accent transition-colors duration-[120ms]">
+          <Search size={13} className="text-insp-text-muted shrink-0" />
           <input
-            className="flex-1 text-qc-text text-[12px] min-w-0 placeholder:text-qc-text-subtle"
+            className="flex-1 text-insp-text text-[12px] min-w-0 placeholder:text-insp-text-subtle"
             type="text"
             placeholder="Search snippets…"
             value={search}
@@ -112,7 +112,7 @@ export default function SnippetsTab() {
         {/* Export / Import */}
         <div className="flex gap-1">
           <button
-            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm text-[11px] font-medium border border-transparent text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 hover:border-qc-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-[120ms]"
+            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-insp-sm text-[11px] font-medium border border-transparent text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 hover:border-insp-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-[120ms]"
             onClick={() => snippets.length > 0 && exportSnippets(snippets)}
             disabled={snippets.length === 0}
             title="Export snippets as JSON"
@@ -121,7 +121,7 @@ export default function SnippetsTab() {
             Export
           </button>
           <button
-            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm text-[11px] font-medium border border-transparent text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 hover:border-qc-border transition-colors duration-[120ms]"
+            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-insp-sm text-[11px] font-medium border border-transparent text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 hover:border-insp-border transition-colors duration-[120ms]"
             onClick={() => importRef.current?.click()}
             title="Import snippets from JSON"
           >
@@ -138,14 +138,14 @@ export default function SnippetsTab() {
         </div>
 
         {importError && (
-          <p className="text-[11px] text-qc-error px-1">{importError}</p>
+          <p className="text-[11px] text-insp-error px-1">{importError}</p>
         )}
       </div>
 
       {/* Snippet list */}
-      <div className="flex-1 overflow-y-auto p-1.5 qc-scrollbar">
+      <div className="flex-1 overflow-y-auto p-1.5 insp-scrollbar">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2.5 px-5 py-10 text-qc-text-muted text-center h-full">
+          <div className="flex flex-col items-center justify-center gap-2.5 px-5 py-10 text-insp-text-muted text-center h-full">
             <Code2 size={36} strokeWidth={1.2} />
             <p className="text-[12px] max-w-[240px] leading-relaxed">
               {snippets.length === 0
@@ -157,14 +157,14 @@ export default function SnippetsTab() {
           filtered.map((snippet) => (
             <div
               key={snippet.id}
-              className="px-3 py-2.5 border border-qc-border rounded-qc-sm mb-1.5 bg-qc-surface hover:border-qc-border-light hover:shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-[120ms]"
+              className="px-3 py-2.5 border border-insp-border rounded-insp-sm mb-1.5 bg-insp-surface hover:border-insp-border-light hover:shadow-[0_2px_8px_rgba(0,0,0,0.2)] transition-all duration-[120ms]"
             >
               {/* Card header */}
               <div className="flex items-center justify-between mb-[7px]">
                 {editingId === snippet.id ? (
                   <div className="flex items-center gap-0.5 flex-1 min-w-0">
                     <input
-                      className="flex-1 min-w-0 px-1.5 py-[2px] bg-qc-surface-2 border border-qc-accent rounded-qc-sm text-qc-text text-[12.5px] font-semibold"
+                      className="flex-1 min-w-0 px-1.5 py-[2px] bg-insp-surface-2 border border-insp-accent rounded-insp-sm text-insp-text text-[12.5px] font-semibold"
                       value={editingName}
                       autoFocus
                       onChange={(e) => setEditingName(e.target.value)}
@@ -175,14 +175,14 @@ export default function SnippetsTab() {
                       onBlur={commitEdit}
                     />
                     <button
-                      className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+                      className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
                       onClick={commitEdit}
                       title="Save"
                     >
                       <Check size={11} />
                     </button>
                     <button
-                      className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+                      className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
                       onClick={cancelEdit}
                       title="Cancel"
                     >
@@ -191,7 +191,7 @@ export default function SnippetsTab() {
                   </div>
                 ) : (
                   <span
-                    className="text-[12.5px] font-semibold text-qc-text cursor-pointer hover:text-qc-accent transition-colors duration-[120ms]"
+                    className="text-[12.5px] font-semibold text-insp-text cursor-pointer hover:text-insp-accent transition-colors duration-[120ms]"
                     title="Click to rename"
                     onClick={() => startEdit(snippet)}
                   >
@@ -202,7 +202,7 @@ export default function SnippetsTab() {
                 <div className="flex gap-0.5">
                   {editingId !== snippet.id && (
                     <button
-                      className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+                      className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
                       onClick={() => startEdit(snippet)}
                       title="Rename"
                     >
@@ -210,14 +210,14 @@ export default function SnippetsTab() {
                     </button>
                   )}
                   <button
-                    className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+                    className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
                     onClick={() => loadSnippetToEditor(snippet)}
                     title="Load into editor"
                   >
                     <Play size={12} />
                   </button>
                   <button
-                    className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-error transition-colors duration-[120ms]"
+                    className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-error transition-colors duration-[120ms]"
                     onClick={() => {
                       if (window.confirm(`Delete snippet "${snippet.name}"?`)) {
                         deleteSnippet(snippet.id);
@@ -231,7 +231,7 @@ export default function SnippetsTab() {
               </div>
 
               {/* Code preview */}
-              <pre className="font-mono text-[11px] text-qc-text-muted whitespace-pre-wrap break-all leading-[1.55] max-h-[52px] overflow-hidden opacity-80">
+              <pre className="font-mono text-[11px] text-insp-text-muted whitespace-pre-wrap break-all leading-[1.55] max-h-[52px] overflow-hidden opacity-80">
                 {snippet.code.slice(0, 140)}
                 {snippet.code.length > 140 ? "…" : ""}
               </pre>

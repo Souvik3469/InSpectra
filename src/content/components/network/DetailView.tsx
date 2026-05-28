@@ -36,9 +36,9 @@ export function DetailView({ req, onClose }: Props) {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Back header */}
-      <div className="flex items-center gap-1.5 px-2 py-1.5 bg-qc-surface border-b border-qc-border shrink-0 min-h-[40px]">
+      <div className="flex items-center gap-1.5 px-2 py-1.5 bg-insp-surface border-b border-insp-border shrink-0 min-h-[40px]">
         <button
-          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
           onClick={onClose}
           title="Back"
         >
@@ -52,7 +52,7 @@ export function DetailView({ req, onClose }: Props) {
         </span>
 
         <span
-          className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-[11px] text-qc-text"
+          className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap font-mono text-[11px] text-insp-text"
           title={req.url}
         >
           {shortUrl(req.url)}
@@ -60,11 +60,11 @@ export function DetailView({ req, onClose }: Props) {
 
         <div className="flex items-center gap-2 shrink-0">
           {req.error ? (
-            <span className="font-mono text-[11px] font-semibold text-qc-error">
+            <span className="font-mono text-[11px] font-semibold text-insp-error">
               ERR
             </span>
           ) : req.pending ? (
-            <span className="font-mono text-[11px] font-semibold text-qc-text-subtle">
+            <span className="font-mono text-[11px] font-semibold text-insp-text-subtle">
               …
             </span>
           ) : (
@@ -75,14 +75,14 @@ export function DetailView({ req, onClose }: Props) {
             </span>
           )}
           {req.duration != null && (
-            <span className="font-mono text-[11px] text-qc-text-muted">
+            <span className="font-mono text-[11px] text-insp-text-muted">
               {fmtMs(req.duration)}
             </span>
           )}
 
           {/* Copy QC JSON report */}
           <button
-            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm border border-qc-border text-qc-text-muted text-[11px] font-medium hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-insp-sm border border-insp-border text-insp-text-muted text-[11px] font-medium hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
             onClick={copyReport}
             title="Copy as QC JSON report (full metadata for developer handoff)"
           >
@@ -92,7 +92,7 @@ export function DetailView({ req, onClose }: Props) {
 
           {/* Copy as HAR (importable by Postman / Insomnia / DevTools) */}
           <button
-            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm border border-qc-border text-qc-text-muted text-[11px] font-medium hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+            className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-insp-sm border border-insp-border text-insp-text-muted text-[11px] font-medium hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
             onClick={copyHar}
             title="Copy as HAR — import directly into Postman, Insomnia, or Chrome DevTools"
           >
@@ -103,14 +103,14 @@ export function DetailView({ req, onClose }: Props) {
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex px-2 bg-qc-surface border-b border-qc-border shrink-0">
+      <div className="flex px-2 bg-insp-surface border-b border-insp-border shrink-0">
         {(["request", "response", "curl"] as DetailTab[]).map((t) => (
           <button
             key={t}
             className={`px-5 py-2.5 text-[12px] font-medium border-b-2 transition-colors duration-[120ms] ${
               tab === t
-                ? "text-qc-accent border-qc-accent"
-                : "text-qc-text-muted border-transparent hover:text-qc-text"
+                ? "text-insp-accent border-insp-accent"
+                : "text-insp-text-muted border-transparent hover:text-insp-text"
             }`}
             onClick={() => setTab(t)}
           >
@@ -120,25 +120,25 @@ export function DetailView({ req, onClose }: Props) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto min-h-0 py-2 qc-scrollbar">
+      <div className="flex-1 overflow-y-auto min-h-0 py-2 insp-scrollbar">
         {tab === "request" && (
           <>
             {/* General — full URL + method + status, selectable */}
-            <div className="px-3 pb-3 border-b border-qc-border">
-              <h4 className="text-[10.5px] font-semibold text-qc-text-muted uppercase tracking-[0.06em] py-1.5">
+            <div className="px-3 pb-3 border-b border-insp-border">
+              <h4 className="text-[10.5px] font-semibold text-insp-text-muted uppercase tracking-[0.06em] py-1.5">
                 General
               </h4>
               <div className="flex flex-col gap-[5px]">
                 <div className="flex gap-2 text-[11px]">
-                  <span className="shrink-0 w-[88px] text-qc-text-subtle font-mono">
+                  <span className="shrink-0 w-[88px] text-insp-text-subtle font-mono">
                     Request URL
                   </span>
-                  <span className="flex-1 text-qc-text font-mono break-all select-text">
+                  <span className="flex-1 text-insp-text font-mono break-all select-text">
                     {req.url}
                   </span>
                 </div>
                 <div className="flex gap-2 text-[11px]">
-                  <span className="shrink-0 w-[88px] text-qc-text-subtle font-mono">
+                  <span className="shrink-0 w-[88px] text-insp-text-subtle font-mono">
                     Method
                   </span>
                   <span
@@ -149,7 +149,7 @@ export function DetailView({ req, onClose }: Props) {
                 </div>
                 {req.status != null && (
                   <div className="flex gap-2 text-[11px]">
-                    <span className="shrink-0 w-[88px] text-qc-text-subtle font-mono">
+                    <span className="shrink-0 w-[88px] text-insp-text-subtle font-mono">
                       Status
                     </span>
                     <span
@@ -163,8 +163,8 @@ export function DetailView({ req, onClose }: Props) {
               </div>
             </div>
 
-            <div className="px-3 pb-2.5 border-b border-qc-border">
-              <h4 className="text-[10.5px] font-semibold text-qc-text-muted uppercase tracking-[0.06em] py-1.5">
+            <div className="px-3 pb-2.5 border-b border-insp-border">
+              <h4 className="text-[10.5px] font-semibold text-insp-text-muted uppercase tracking-[0.06em] py-1.5">
                 Request Headers
               </h4>
               <HeadersTable headers={req.requestHeaders} />
@@ -177,17 +177,17 @@ export function DetailView({ req, onClose }: Props) {
 
         {tab === "response" &&
           (req.error ? (
-            <p className="px-3 py-3 text-[12px] text-qc-error font-mono">
+            <p className="px-3 py-3 text-[12px] text-insp-error font-mono">
               {req.error}
             </p>
           ) : req.pending ? (
-            <p className="px-3 py-4 text-[12px] text-qc-text-subtle italic">
+            <p className="px-3 py-4 text-[12px] text-insp-text-subtle italic">
               Request in progress…
             </p>
           ) : (
             <>
-              <div className="px-3 pb-2.5 border-b border-qc-border">
-                <h4 className="text-[10.5px] font-semibold text-qc-text-muted uppercase tracking-[0.06em] py-1.5">
+              <div className="px-3 pb-2.5 border-b border-insp-border">
+                <h4 className="text-[10.5px] font-semibold text-insp-text-muted uppercase tracking-[0.06em] py-1.5">
                   Response Headers
                 </h4>
                 <HeadersTable headers={req.responseHeaders} />

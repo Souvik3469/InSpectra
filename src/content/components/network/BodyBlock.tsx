@@ -75,8 +75,8 @@ export function BodyBlock({ title, text }: Props) {
           key={i}
           ref={(el) => { markRefs.current[i] = el }}
           className={i === matchIdx
-            ? 'bg-qc-accent text-qc-bg rounded-[2px] not-italic'
-            : 'bg-[rgba(88,166,255,0.28)] text-qc-text rounded-[2px] not-italic'}
+            ? 'bg-insp-accent text-insp-bg rounded-[2px] not-italic'
+            : 'bg-[rgba(88,166,255,0.28)] text-insp-text rounded-[2px] not-italic'}
         >
           {displayText.slice(pos, pos + query.length)}
         </mark>,
@@ -91,16 +91,16 @@ export function BodyBlock({ title, text }: Props) {
     <div className="px-3 pb-2.5">
       {/* Title row */}
       <div className="flex items-center justify-between py-1.5">
-        <h4 className="text-[10.5px] font-semibold text-qc-text-muted uppercase tracking-[0.06em]">
+        <h4 className="text-[10.5px] font-semibold text-insp-text-muted uppercase tracking-[0.06em]">
           {title}
         </h4>
         <div className="flex items-center gap-1">
           {isJson && (
             <button
-              className={`inline-flex items-center gap-[5px] px-[7px] py-[2px] rounded-qc-sm border text-[11px] font-medium transition-colors duration-[120ms] ${
+              className={`inline-flex items-center gap-[5px] px-[7px] py-[2px] rounded-insp-sm border text-[11px] font-medium transition-colors duration-[120ms] ${
                 isPretty
-                  ? 'border-qc-accent text-qc-accent bg-[rgba(88,166,255,0.08)]'
-                  : 'border-qc-border text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2'
+                  ? 'border-insp-accent text-insp-accent bg-[rgba(88,166,255,0.08)]'
+                  : 'border-insp-border text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2'
               }`}
               onClick={() => setIsPretty((p) => !p)}
               title="Pretty-print JSON"
@@ -110,10 +110,10 @@ export function BodyBlock({ title, text }: Props) {
             </button>
           )}
           <button
-            className={`inline-flex items-center gap-[5px] px-[7px] py-[2px] rounded-qc-sm border text-[11px] font-medium transition-colors duration-[120ms] ${
+            className={`inline-flex items-center gap-[5px] px-[7px] py-[2px] rounded-insp-sm border text-[11px] font-medium transition-colors duration-[120ms] ${
               showSearch
-                ? 'border-qc-accent text-qc-accent bg-[rgba(88,166,255,0.08)]'
-                : 'border-qc-border text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2'
+                ? 'border-insp-accent text-insp-accent bg-[rgba(88,166,255,0.08)]'
+                : 'border-insp-border text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2'
             }`}
             onClick={() => showSearch ? (setShowSearch(false), setQuery('')) : openSearch()}
             title="Find in body (Cmd/Ctrl+F)"
@@ -130,7 +130,7 @@ export function BodyBlock({ title, text }: Props) {
           <div className="relative flex-1">
             <input
               ref={searchRef}
-              className="w-full px-2 py-[3px] pr-[52px] bg-qc-surface-2 border border-qc-border rounded-qc-sm text-qc-text text-[11.5px] focus:border-qc-accent transition-colors duration-[120ms] placeholder:text-qc-text-subtle"
+              className="w-full px-2 py-[3px] pr-[52px] bg-insp-surface-2 border border-insp-border rounded-insp-sm text-insp-text text-[11.5px] focus:border-insp-accent transition-colors duration-[120ms] placeholder:text-insp-text-subtle"
               placeholder="Find…"
               value={query}
               onChange={(e) => { setQuery(e.target.value); setMatchIdx(0) }}
@@ -143,7 +143,7 @@ export function BodyBlock({ title, text }: Props) {
               }}
             />
             {query && (
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-qc-text-subtle font-mono pointer-events-none">
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-insp-text-subtle font-mono pointer-events-none">
                 {matches.length ? `${matchIdx + 1}/${matches.length}` : '0/0'}
               </span>
             )}
@@ -151,14 +151,14 @@ export function BodyBlock({ title, text }: Props) {
           {matches.length > 1 && (
             <>
               <button
-                className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+                className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
                 onClick={() => setMatchIdx((i) => (i - 1 + matches.length) % matches.length)}
                 title="Previous (Shift+Enter)"
               >
                 <ChevronUp size={11} />
               </button>
               <button
-                className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+                className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
                 onClick={() => setMatchIdx((i) => (i + 1) % matches.length)}
                 title="Next (Enter)"
               >
@@ -170,7 +170,7 @@ export function BodyBlock({ title, text }: Props) {
       )}
 
       {/* Body text */}
-      <pre className="font-mono text-[11px] text-qc-text whitespace-pre-wrap break-all leading-[1.55] max-h-[200px] overflow-y-auto bg-qc-surface-2 border border-qc-border rounded-qc-sm px-2.5 py-2 qc-scrollbar">
+      <pre className="font-mono text-[11px] text-insp-text whitespace-pre-wrap break-all leading-[1.55] max-h-[200px] overflow-y-auto bg-insp-surface-2 border border-insp-border rounded-insp-sm px-2.5 py-2 insp-scrollbar">
         {renderHighlighted()}
       </pre>
     </div>

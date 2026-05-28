@@ -90,20 +90,20 @@ export default function NetworkTab() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5 px-2 py-1.5 bg-qc-surface border-b border-qc-border shrink-0">
+      <div className="flex items-center gap-1.5 px-2 py-1.5 bg-insp-surface border-b border-insp-border shrink-0">
         {/* Record toggle */}
         <button
-          className={`inline-flex items-center gap-[5px] px-2 py-[3px] rounded-qc-sm text-[11px] font-medium shrink-0 border transition-colors duration-[120ms] ${
+          className={`inline-flex items-center gap-[5px] px-2 py-[3px] rounded-insp-sm text-[11px] font-medium shrink-0 border transition-colors duration-[120ms] ${
             isRecording
-              ? "text-qc-text border-qc-border-light bg-qc-surface-2"
-              : "text-qc-text-muted border-qc-border bg-qc-surface-2"
+              ? "text-insp-text border-insp-border-light bg-insp-surface-2"
+              : "text-insp-text-muted border-insp-border bg-insp-surface-2"
           }`}
           onClick={toggleRecording}
           title={isRecording ? "Pause recording" : "Resume recording"}
         >
           <span
             className={`w-[7px] h-[7px] rounded-full shrink-0 transition-colors duration-[120ms] ${
-              isRecording ? "qc-record-dot--active" : "bg-qc-text-subtle"
+              isRecording ? "insp-record-dot--active" : "bg-insp-text-subtle"
             }`}
           />
           {isRecording ? "Recording" : "Paused"}
@@ -111,7 +111,7 @@ export default function NetworkTab() {
 
         {/* URL filter */}
         <input
-          className="flex-1 min-w-0 px-2 py-[3px] bg-qc-surface-2 border border-qc-border rounded-qc-sm text-qc-text text-[11.5px] focus:border-qc-accent transition-colors duration-[120ms] placeholder:text-qc-text-subtle"
+          className="flex-1 min-w-0 px-2 py-[3px] bg-insp-surface-2 border border-insp-border rounded-insp-sm text-insp-text text-[11.5px] focus:border-insp-accent transition-colors duration-[120ms] placeholder:text-insp-text-subtle"
           type="text"
           placeholder="Filter URL…"
           value={urlFilter}
@@ -120,7 +120,7 @@ export default function NetworkTab() {
 
         {/* Method filter */}
         <select
-          className="px-[6px] py-[3px] bg-qc-surface-2 border border-qc-border rounded-qc-sm text-qc-text text-[11px] cursor-pointer shrink-0 appearance-none"
+          className="px-[6px] py-[3px] bg-insp-surface-2 border border-insp-border rounded-insp-sm text-insp-text text-[11px] cursor-pointer shrink-0 appearance-none"
           value={methodFilter}
           onChange={(e) => setMethodFilter(e.target.value as MethodFilter)}
         >
@@ -139,7 +139,7 @@ export default function NetworkTab() {
         {checkedIds.size > 0 && (
           <>
             <button
-              className="inline-flex items-center gap-1 px-2 py-[3px] rounded-qc-sm border border-qc-accent text-qc-accent text-[11px] font-medium hover:bg-[rgba(88,166,255,0.1)] transition-colors duration-[120ms] shrink-0"
+              className="inline-flex items-center gap-1 px-2 py-[3px] rounded-insp-sm border border-insp-accent text-insp-accent text-[11px] font-medium hover:bg-[rgba(88,166,255,0.1)] transition-colors duration-[120ms] shrink-0"
               onClick={exportSelectedJson}
               title={`Download ${checkedIds.size} request${checkedIds.size > 1 ? "s" : ""} as QC JSON report`}
             >
@@ -147,7 +147,7 @@ export default function NetworkTab() {
               JSON ({checkedIds.size})
             </button>
             <button
-              className="inline-flex items-center gap-1 px-2 py-[3px] rounded-qc-sm border border-qc-accent text-qc-accent text-[11px] font-medium hover:bg-[rgba(88,166,255,0.1)] transition-colors duration-[120ms] shrink-0"
+              className="inline-flex items-center gap-1 px-2 py-[3px] rounded-insp-sm border border-insp-accent text-insp-accent text-[11px] font-medium hover:bg-[rgba(88,166,255,0.1)] transition-colors duration-[120ms] shrink-0"
               onClick={exportSelectedHar}
               title={`Download ${checkedIds.size} request${checkedIds.size > 1 ? "s" : ""} as HAR (Postman / Insomnia / DevTools)`}
             >
@@ -159,7 +159,7 @@ export default function NetworkTab() {
 
         {/* Clear */}
         <button
-          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
           onClick={() => {
             clearNetworkRequests();
             setCheckedIds(new Set());
@@ -172,7 +172,7 @@ export default function NetworkTab() {
 
       {/* Column headers */}
       {filtered.length > 0 && (
-        <div className="flex items-center px-2 py-[3px] bg-qc-surface border-b border-qc-border shrink-0">
+        <div className="flex items-center px-2 py-[3px] bg-insp-surface border-b border-insp-border shrink-0">
           <span
             className="w-[26px] shrink-0 flex items-center justify-center"
             onClick={(e) => {
@@ -187,22 +187,22 @@ export default function NetworkTab() {
                 if (el) el.indeterminate = someSelected;
               }}
               type="checkbox"
-              className="w-[9px] h-[9px] accent-qc-accent cursor-pointer"
+              className="w-[9px] h-[9px] accent-insp-accent cursor-pointer"
               checked={allSelected}
               onChange={() => {}}
               tabIndex={-1}
             />
           </span>
-          <span className="w-[54px] shrink-0 text-[10.5px] font-semibold text-qc-text-subtle uppercase tracking-[0.04em]">
+          <span className="w-[54px] shrink-0 text-[10.5px] font-semibold text-insp-text-subtle uppercase tracking-[0.04em]">
             Method
           </span>
-          <span className="flex-1 min-w-0 text-[10.5px] font-semibold text-qc-text-subtle uppercase tracking-[0.04em]">
+          <span className="flex-1 min-w-0 text-[10.5px] font-semibold text-insp-text-subtle uppercase tracking-[0.04em]">
             URL
           </span>
-          <span className="w-[44px] shrink-0 text-[10.5px] font-semibold text-qc-text-subtle uppercase tracking-[0.04em]">
+          <span className="w-[44px] shrink-0 text-[10.5px] font-semibold text-insp-text-subtle uppercase tracking-[0.04em]">
             Status
           </span>
-          <span className="w-[44px] shrink-0 text-right text-[10.5px] font-semibold text-qc-text-subtle uppercase tracking-[0.04em]">
+          <span className="w-[44px] shrink-0 text-right text-[10.5px] font-semibold text-insp-text-subtle uppercase tracking-[0.04em]">
             Time
           </span>
         </div>
@@ -210,11 +210,11 @@ export default function NetworkTab() {
 
       {/* Request list */}
       <div
-        className="flex-1 overflow-y-auto min-h-0 qc-scrollbar"
+        className="flex-1 overflow-y-auto min-h-0 insp-scrollbar"
         ref={listRef}
       >
         {filtered.length === 0 ? (
-          <div className="px-4 py-8 text-center text-[12px] text-qc-text-subtle italic">
+          <div className="px-4 py-8 text-center text-[12px] text-insp-text-subtle italic">
             {networkRequests.length === 0
               ? isRecording
                 ? "Waiting for network requests…"
@@ -241,7 +241,7 @@ export default function NetworkTab() {
               >
                 <input
                   type="checkbox"
-                  className="w-[9px] h-[9px] accent-qc-accent cursor-pointer"
+                  className="w-[9px] h-[9px] accent-insp-accent cursor-pointer"
                   checked={checkedIds.has(req.id)}
                   onChange={() => {}} // controlled via onClick on parent span
                   tabIndex={-1}
@@ -258,13 +258,13 @@ export default function NetworkTab() {
               {/* URL + initiator */}
               <span className="flex-1 min-w-0 flex flex-col gap-px px-1">
                 <span
-                  className="overflow-hidden text-ellipsis whitespace-nowrap text-qc-text font-mono text-[11px]"
+                  className="overflow-hidden text-ellipsis whitespace-nowrap text-insp-text font-mono text-[11px]"
                   title={req.url}
                 >
                   {shortUrl(req.url)}
                 </span>
                 {req.initiator && (
-                  <span className="font-mono text-[10px] text-qc-text-subtle overflow-hidden text-ellipsis whitespace-nowrap">
+                  <span className="font-mono text-[10px] text-insp-text-subtle overflow-hidden text-ellipsis whitespace-nowrap">
                     {req.initiator}
                   </span>
                 )}
@@ -274,9 +274,9 @@ export default function NetworkTab() {
               <span
                 className={`w-[44px] shrink-0 font-mono text-[11px] font-semibold ${
                   req.error
-                    ? "text-qc-error"
+                    ? "text-insp-error"
                     : req.pending
-                      ? "text-qc-text-subtle"
+                      ? "text-insp-text-subtle"
                       : statusColor(req.status)
                 }`}
               >
@@ -284,7 +284,7 @@ export default function NetworkTab() {
               </span>
 
               {/* Time */}
-              <span className="w-[44px] shrink-0 text-right text-[11px] text-qc-text-subtle">
+              <span className="w-[44px] shrink-0 text-right text-[11px] text-insp-text-subtle">
                 {req.pending ? "" : fmtMs(req.duration)}
               </span>
             </div>

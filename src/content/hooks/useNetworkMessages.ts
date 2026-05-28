@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { usePanelStore } from '../store'
-import { QC_NETWORK } from '../../shared/constants'
+import { IS_NETWORK } from '../../shared/constants'
 import type { NetworkRequest } from '../../shared/types'
 
 // Narrowed shape for messages coming from the MAIN-world network interceptor.
@@ -16,7 +16,7 @@ interface RawNetworkEvent {
 function isNetworkEvent(data: unknown): data is RawNetworkEvent {
   if (data === null || typeof data !== 'object') return false
   const d = data as Record<string, unknown>
-  return d['type'] === QC_NETWORK &&
+  return d['type'] === IS_NETWORK &&
     (d['event'] === 'req' || d['event'] === 'res' || d['event'] === 'err') &&
     typeof d['id'] === 'string'
 }

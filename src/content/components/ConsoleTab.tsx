@@ -50,7 +50,7 @@ export default function ConsoleTab() {
     <div className="flex flex-col h-full overflow-hidden" onKeyDown={handleKeyDown}>
 
       {/* Editor */}
-      <div className="qc-editor shrink-0 border-b border-qc-border">
+      <div className="insp-editor shrink-0 border-b border-insp-border">
         <CodeMirror
           value={editorCode}
           onChange={handleChange}
@@ -75,9 +75,9 @@ export default function ConsoleTab() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-qc-surface border-b border-qc-border shrink-0">
+      <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-insp-surface border-b border-insp-border shrink-0">
         <button
-          className="inline-flex items-center gap-[5px] px-3 py-[5px] bg-qc-accent text-qc-bg rounded-qc-sm text-[12px] font-semibold border border-qc-accent hover:bg-qc-accent-hover hover:border-qc-accent-hover disabled:opacity-55 disabled:cursor-not-allowed transition-colors duration-[120ms]"
+          className="inline-flex items-center gap-[5px] px-3 py-[5px] bg-insp-accent text-insp-bg rounded-insp-sm text-[12px] font-semibold border border-insp-accent hover:bg-insp-accent-hover hover:border-insp-accent-hover disabled:opacity-55 disabled:cursor-not-allowed transition-colors duration-[120ms]"
           onClick={() => run(resetIndex)}
           disabled={isExecuting}
           title="Run (Ctrl+Enter)"
@@ -87,7 +87,7 @@ export default function ConsoleTab() {
         </button>
 
         <button
-          className="inline-flex items-center gap-[5px] px-3 py-[5px] bg-qc-surface-2 border border-qc-border rounded-qc-sm text-qc-text text-[12px] font-medium hover:bg-[#2d333b] hover:border-qc-border-light transition-colors duration-[120ms]"
+          className="inline-flex items-center gap-[5px] px-3 py-[5px] bg-insp-surface-2 border border-insp-border rounded-insp-sm text-insp-text text-[12px] font-medium hover:bg-[#2d333b] hover:border-insp-border-light transition-colors duration-[120ms]"
           onClick={saveSnippet}
           title="Save current code as a snippet"
         >
@@ -98,14 +98,14 @@ export default function ConsoleTab() {
         <span className="flex-1" />
 
         {historyLength > 0 && (
-          <span className="text-[11px] text-qc-text-muted" title="Use ↑ ↓ on first/last line to navigate history">
+          <span className="text-[11px] text-insp-text-muted" title="Use ↑ ↓ on first/last line to navigate history">
             ↑ {historyLength}
           </span>
         )}
 
         {replVarCount > 0 && (
           <button
-            className="inline-flex items-center gap-1 px-2 py-[3px] rounded-qc-sm text-[11px] text-qc-text-subtle border border-qc-border hover:text-qc-text hover:border-qc-border-light transition-colors duration-[120ms]"
+            className="inline-flex items-center gap-1 px-2 py-[3px] rounded-insp-sm text-[11px] text-insp-text-subtle border border-insp-border hover:text-insp-text hover:border-insp-border-light transition-colors duration-[120ms]"
             onClick={clearRepl}
             title="Clear REPL state — delete all persisted variables"
           >
@@ -115,7 +115,7 @@ export default function ConsoleTab() {
         )}
 
         <button
-          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-qc-sm text-qc-text-muted hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-insp-sm text-insp-text-muted hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
           onClick={clearOutputs}
           title="Clear output"
         >
@@ -124,9 +124,9 @@ export default function ConsoleTab() {
       </div>
 
       {/* Output */}
-      <div ref={outputRef} className="flex-1 overflow-y-auto min-h-0 py-1 font-mono text-[12px] qc-scrollbar">
+      <div ref={outputRef} className="flex-1 overflow-y-auto min-h-0 py-1 font-mono text-[12px] insp-scrollbar">
         {outputs.length === 0 ? (
-          <div className="px-3.5 py-6 text-qc-text-subtle italic text-[12px]">
+          <div className="px-3.5 py-6 text-insp-text-subtle italic text-[12px]">
             Run some code to see output here
           </div>
         ) : (

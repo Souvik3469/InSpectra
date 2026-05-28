@@ -12,12 +12,12 @@ const TYPE_PREFIX: Record<ConsoleOutput['type'], string> = {
 
 // Full Tailwind class strings — must be complete so JIT includes them all
 const TYPE_STYLES: Record<ConsoleOutput['type'], string> = {
-  log:          'text-qc-text',
-  warn:         'text-qc-warn bg-[rgba(210,153,34,0.06)] border-b border-[rgba(210,153,34,0.12)]',
-  error:        'text-qc-error bg-[rgba(248,81,73,0.06)] border-b border-[rgba(248,81,73,0.12)]',
-  info:         'text-qc-info',
-  return:       'text-qc-return bg-[rgba(210,168,255,0.05)]',
-  'eval-error': 'text-qc-error bg-[rgba(248,81,73,0.06)] border-b border-[rgba(248,81,73,0.12)]',
+  log:          'text-insp-text',
+  warn:         'text-insp-warn bg-[rgba(210,153,34,0.06)] border-b border-[rgba(210,153,34,0.12)]',
+  error:        'text-insp-error bg-[rgba(248,81,73,0.06)] border-b border-[rgba(248,81,73,0.12)]',
+  info:         'text-insp-info',
+  return:       'text-insp-return bg-[rgba(210,168,255,0.05)]',
+  'eval-error': 'text-insp-error bg-[rgba(248,81,73,0.06)] border-b border-[rgba(248,81,73,0.12)]',
 }
 
 interface Props {
@@ -40,7 +40,7 @@ export default function OutputLine({ output }: Props) {
           : output.values.map((v, i) => (
               <span
                 key={i}
-                className={isEvalError && i === 1 ? 'block text-[11px] text-qc-text-muted mt-[3px] opacity-70' : ''}
+                className={isEvalError && i === 1 ? 'block text-[11px] text-insp-text-muted mt-[3px] opacity-70' : ''}
               >
                 {i > 0 && !isEvalError && ' '}
                 {v}

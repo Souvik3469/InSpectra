@@ -11,7 +11,7 @@ export function CopyBtn({ text }: Props) {
 
   return (
     <button
-      className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-qc-sm border border-qc-border text-qc-text-muted text-[11px] font-medium hover:text-qc-text hover:bg-qc-surface-2 transition-colors duration-[120ms]"
+      className="inline-flex items-center gap-1 px-[7px] py-[2px] rounded-insp-sm border border-insp-border text-insp-text-muted text-[11px] font-medium hover:text-insp-text hover:bg-insp-surface-2 transition-colors duration-[120ms]"
       onClick={() =>
         navigator.clipboard.writeText(text)
           .then(() => {
