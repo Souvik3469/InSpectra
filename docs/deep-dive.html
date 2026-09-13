@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InSpectra — Deep Dive (Architecture / Internals)</title>
+<style>
+  :root {
+    --bg: #0f1117; --bg-alt: #161925; --panel: #1a1e2b; --border: #2a2f40;
+    --text: #dbe1ee; --text-dim: #8b93a7; --accent: #7aa2ff; --accent2: #c792ea;
+    --good: #4fd1a5; --warn: #f0b74e; --bad: #ff7a85; --code-bg: #10131c;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --maxw: 980px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--sans); line-height:1.6; }
+  body { display:flex; min-height:100vh; }
+  nav.toc { position:sticky; top:0; align-self:flex-start; width:280px; min-width:280px; height:100vh;
+    overflow-y:auto; background:var(--bg-alt); border-right:1px solid var(--border); padding:20px 16px 60px; }
+  nav.toc .brand { font-weight:700; font-size:1.1rem; color:var(--accent); margin-bottom:4px; }
+  nav.toc .brand-sub { font-size:.78rem; color:var(--text-dim); margin-bottom:18px; }
+  nav.toc a { display:block; color:var(--text-dim); text-decoration:none; font-size:.84rem; padding:3px 0 3px 10px; border-left:2px solid transparent; }
+  nav.toc a:hover { color:var(--accent); border-left-color:var(--accent); }
+  nav.toc .lvl1 { font-weight:700; color:var(--text); margin-top:14px; font-size:.9rem; padding-left:0; border-left:none; }
+  nav.toc .lvl1:first-child { margin-top:0; }
+  main { flex:1; min-width:0; padding:40px clamp(20px,5vw,70px) 120px; }
+  .wrap { max-width:var(--maxw); margin:0 auto; }
+  h1 { font-size:2rem; color:#fff; margin-bottom:.2em; }
+  h1 .sub { display:block; font-size:1rem; font-weight:400; color:var(--text-dim); margin-top:6px; }
+  h2 { font-size:1.5rem; color:#fff; border-bottom:1px solid var(--border); padding-bottom:10px; margin-top:3.2em; scroll-margin-top:20px; }
+  h3 { font-size:1.18rem; color:var(--accent); margin-top:2.4em; scroll-margin-top:20px; }
+  h4 { font-size:1rem; color:var(--accent2); margin-top:1.8em; margin-bottom:.5em; }
+  a { color:var(--accent); }
+  code { font-family:var(--mono); background:var(--code-bg); padding:.1em .4em; border-radius:4px; font-size:.88em; color:#ffd479; border:1px solid var(--border); }
+  pre { background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:14px 16px; overflow-x:auto; font-size:.84rem; }
+  pre code { border:none; background:none; padding:0; color:#cdd6e4; }
+  ul, ol { padding-left:1.4em; } li { margin-bottom:.35em; }
+  table { width:100%; border-collapse:collapse; margin:1em 0 1.6em; font-size:.9rem; }
+  th, td { border:1px solid var(--border); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--panel); color:#fff; }
+  .callout { border-left:3px solid var(--accent); background:var(--panel); padding:12px 16px; margin:1.4em 0; border-radius:0 6px 6px 0; }
+  .callout.warn { border-left-color:var(--warn); }
+  .callout.bad { border-left-color:var(--bad); }
+  .callout.good { border-left-color:var(--good); }
+  .callout .lbl { display:block; font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-dim); margin-bottom:6px; }
+  .flow { font-family:var(--mono); font-size:.82rem; background:var(--code-bg); border:1px solid var(--border); border-radius:8px; padding:16px; white-space:pre; overflow-x:auto; color:#cdd6e4; }
+  @media (max-width: 900px) { body { display:block; } nav.toc { position:static; width:auto; min-width:0; height:auto; border-right:none; border-bottom:1px solid var(--border); } }
+</style></head>
+<body>
+<nav class="toc">
+  <div class="brand">InSpectra</div>
+  <div class="brand-sub">Architecture &amp; Internals</div>
+  <a class="lvl1" href="#overview">0. Overview</a>
+  <a href="#worlds">Four execution contexts</a>
+  <a href="#map">Repo map</a>
+  <a class="lvl1" href="#exec">1. Code Execution</a>
+  <a href="#csp">The CSP problem</a>
+  <a href="#repl">REPL persistence</a>
+  <a href="#asyncpath">Top-level await</a>
+  <a href="#capture">Console capture</a>
+  <a class="lvl1" href="#serial">2. Serialisation</a>
+  <a class="lvl1" href="#network">3. Network Interception</a>
+  <a href="#buffer">The buffer</a>
+  <a href="#initiator">Initiator recovery</a>
+  <a class="lvl1" href="#ui">4. Panel &amp; State</a>
+  <a class="lvl1" href="#build">5. Build</a>
+  <a class="lvl1" href="#different">6. What I'd Do Differently</a>
+</nav>
+<main><div class="wrap">
+
+<h1>InSpectra — Deep Dive
+  <span class="sub">A floating DevTools panel: run JS in the real page context, inspect network traffic, keep snippets</span>
+</h1>
+
+<div class="callout">
+  <span class="lbl">Scope</span>
+  The <a href="../README.md">README</a> covers <em>what</em> InSpectra does, feature by feature.
+  This document covers <em>how</em> — the constraints Chrome's extension model imposes, and the
+  choices made to work inside them. It also says where the implementation is weak.
+</div>
+
+<h2 id="overview">0. Overview</h2>
+
+<h3 id="worlds">Four execution contexts, and why</h3>
+
+<p>The whole architecture follows from one platform constraint: <strong>a Chrome extension's content
+script runs in an "isolated world"</strong> — its own JavaScript realm, sharing the DOM with the page
+but not its globals. It cannot see <code>window.myAppState</code>, cannot call page functions, and
+cannot patch <code>window.fetch</code> in a way the page will observe.</p>
+
+<p>InSpectra needs both isolation (so a React UI doesn't collide with the page) and page access (so
+user code can touch page globals, and so <code>fetch</code> can be intercepted). So it runs in four
+places:</p>
+
+<table>
+<tr><th>Context</th><th>World</th><th>Lifetime</th><th>Responsibility</th></tr>
+<tr><td>Service worker</td><td>extension</td><td>event-driven</td><td>Toolbar clicks; injects the executor</td></tr>
+<tr><td>Content script</td><td>isolated</td><td>per page</td><td>React panel, Zustand store, persistence</td></tr>
+<tr><td>Network interceptor</td><td><strong>MAIN</strong></td><td>page lifetime, from <code>document_start</code></td><td>Patches <code>fetch</code> and <code>XMLHttpRequest</code></td></tr>
+<tr><td><code>pageExecutor</code></td><td><strong>MAIN</strong></td><td>one execution</td><td>Evaluates user code, captures console</td></tr>
+</table>
+
+<p>Nothing shares memory across those boundaries. Every interaction is a message — the full protocol
+is in <a href="message-protocol.md"><code>message-protocol.md</code></a>.</p>
+
+<h3 id="map">Repo map</h3>
+<div class="flow">src/
+├── background/index.ts          service worker + pageExecutor (injected, self-contained)
+├── content/
+│   ├── index.tsx                mounts React into an injected root
+│   ├── App.tsx                  panel shell, tab routing
+│   ├── components/              Panel, Header, ConsoleTab, NetworkTab, SnippetsTab,
+│   │                            ObjectTree, OutputLine, ResizeHandles, network/*
+│   ├── hooks/                   useCodeExecution, useExecutionHistory, useNetworkMessages,
+│   │                            useDraggable, useResizable
+│   ├── store/index.ts           Zustand + persist → chrome.storage.local
+│   └── utils/                   executor (content half), network, reportGenerator, uid
+├── network-interceptor/index.ts MAIN-world fetch/XHR patching
+└── shared/constants.ts          every message type and limit</div>
+
+<h2 id="exec">1. Code Execution</h2>
+
+<h3 id="csp">The CSP problem — the decision that shaped the project</h3>
+
+<p>To run user code with access to page globals, that code must be evaluated in the page's realm.
+The obvious way is to append a <code>&lt;script&gt;</code> element:</p>
+
+<pre><code>const s = document.createElement('script')
+s.textContent = userCode
+document.documentElement.appendChild(s)   // ← blocked by CSP</code></pre>
+
+<p>This is what InSpectra originally did, and it <strong>fails on any page with a strict
+Content-Security-Policy</strong> — which is most local dev servers and most hardened production
+apps. Precisely the pages a developer tool needs to work on.</p>
+
+<div class="callout good">
+  <span class="lbl">The fix</span>
+  <code>chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func, args })</code>.
+  Chrome injects this at the engine level, and it is <strong>not subject to the page's CSP</strong>.
+  Same access, no CSP dependency.
+</div>
+
+<p>The cost is a real constraint: the injected function is serialised across a process boundary, so
+it must be <strong>entirely self-contained</strong> — no imports, no closure references, no
+TypeScript helpers. That is why <code>pageExecutor</code> is one large ES5-flavoured function with
+its own serialisers inlined rather than composed from modules. It looks unidiomatic next to the rest
+of the codebase, and it has to.</p>
+
+<h3 id="repl">REPL persistence — the trick and its cost</h3>
+
+<p>A browser console remembers your variables between commands. Reproducing that is harder than it
+looks, because <code>let</code> and <code>const</code> are block-scoped: declare one inside an
+<code>eval</code> and it's gone the moment evaluation ends. <code>var</code> at global scope attaches
+to <code>window</code> and survives.</p>
+
+<pre><code>var replCode = code.replace(/\b(let|const)\b/g, 'var')
+...
+var result = (0, eval)(evalCode)   // indirect eval → runs in GLOBAL scope, not local</code></pre>
+
+<p><code>(0, eval)</code> rather than a bare <code>eval</code> is deliberate — bare <code>eval</code>
+inherits the calling scope; the comma expression turns it into an ordinary function reference, which
+forces global-scope evaluation. That detail is the difference between variables persisting and not.</p>
+
+<p>Tracking which variables belong to the REPL is done by <strong>diffing <code>window</code></strong>:
+snapshot <code>Object.keys(window)</code> before evaluation, diff after, accumulate the new names into
+<code>window.__qcReplVars</code>. That array backs both the <code>N vars</code> badge and the
+clear-state button.</p>
+
+<div class="callout bad">
+  <span class="lbl">Where this breaks</span>
+  The rewrite is a blind regex over the entire source, so it also rewrites <code>let</code> and
+  <code>const</code> inside <strong>strings, template literals, comments, and property names</strong>.
+  <code>console.log("const x")</code> prints <code>var x</code>. <code>{ const: 1 }</code> becomes a
+  syntax error. The code comment calls it "best-effort, ~95% of real usage", which is honest — but it
+  corrupts input silently rather than failing loudly. A real tokenizer is the fix, and would remove
+  the whole class of bug.
+</div>
+
+<h3 id="asyncpath">Top-level <code>await</code>, and why it needs a second trick</h3>
+
+<p><code>await</code> is only legal inside an async function, so code containing it is wrapped in an
+async IIFE. But that reintroduces the original problem: <code>var</code> inside a function is
+function-scoped, so declarations stop reaching <code>window</code>.</p>
+
+<pre><code>// detected: /\bawait\b/
+var lifted = []                       // extract simple `var name` declarations
+var preDecls = 'var a; var b;\n'      // pre-declare them at global scope
+var innerCode = replCode.replace(/\bvar\s+([\w$]+)\b/g, '$1')   // strip `var` inside
+evalCode = preDecls + '(async function(){\n' + innerCode + '\n})()'</code></pre>
+
+<p>Declare the names globally first, then strip <code>var</code> inside the IIFE so the assignments
+target those globals. Awaited code persists its variables like everything else.</p>
+
+<p>Documented limitation: comma-separated (<code>var a = 1, b = 2</code>) and destructured
+(<code>var {x} = o</code>) declarations aren't lifted, so they don't persist. And the lifting regex
+shares the string-blindness of the first one.</p>
+
+<h3 id="capture">Console capture, and one subtle ordering choice</h3>
+
+<p>Before evaluation, the four console methods are swapped for capturing versions that record the
+value <em>and</em> forward to the original. Afterwards they're restored — but <strong>in
+<code>finish()</code>, not in a <code>finally</code> block</strong>.</p>
+
+<div class="callout good">
+  <span class="lbl">Why that matters</span>
+  A <code>finally</code> would restore the console the instant <code>eval</code> returns. If the
+  snippet returned a Promise, every <code>console.log</code> emitted while it settled would be
+  missed — which is most of the interesting output from any <code>await fetch(...)</code>.
+  Restoring inside <code>finish()</code> means capture stays live until the work is actually done.
+</div>
+
+<p>The tradeoff: while the console is swapped, logging the <em>page itself</em> does is captured too,
+and appears as though it came from the user's snippet.</p>
+
+<h2 id="serial">2. Serialisation — twice, on purpose</h2>
+
+<p>Every value crossing <code>postMessage</code> must be structured-cloneable. Functions, DOM nodes,
+class instances and circular structures are not. So <code>pageExecutor</code> converts each value
+<strong>twice</strong>:</p>
+
+<table>
+<tr><th></th><th><code>serialize()</code></th><th><code>toTree()</code></th></tr>
+<tr><td>Produces</td><td>a flat string</td><td>a tagged node graph</td></tr>
+<tr><td>Feeds</td><td>the console output line</td><td>the expandable object inspector</td></tr>
+<tr><td>Depth cap</td><td>3</td><td>5</td></tr>
+<tr><td>Element cap</td><td>20</td><td>100 array / 50 object</td></tr>
+<tr><td>Cycles</td><td>depth cap only</td><td>path-tracked via <code>seen</code></td></tr>
+</table>
+
+<p><code>toTree</code> tags every node (<code>prim</code>, <code>str</code>, <code>arr</code>,
+<code>obj</code>, <code>err</code>, <code>cut</code>) and carries a collapsed preview
+(<code>(3) [1, 2, 3]</code>, <code>{name: "Alice", …}</code>) so the UI can render depth without
+re-walking anything.</p>
+
+<p>Cycle detection is <em>path-based</em>: push on entry, pop on exit, so a repeated sibling is still
+rendered while a genuine cycle is cut. Correct — but it linear-scans an array per node, which is
+quadratic on wide graphs. The two depth caps also disagree, so the flat line and the tree beside it
+can truncate at different points.</p>
+
+<h2 id="network">3. Network Interception</h2>
+
+<p><code>network-interceptor.js</code> is injected at <code>document_start</code> in the MAIN world —
+early enough to replace <code>window.fetch</code> and <code>window.XMLHttpRequest</code> before page
+code captures references to them. A <code>window.__isNetActive</code> guard prevents double-wrapping
+when SPA navigation re-injects.</p>
+
+<p><code>fetch</code> is wrapped as a function; XHR is replaced by a subclass overriding
+<code>open</code>, <code>setRequestHeader</code>, and <code>send</code>, with listeners on
+<code>load</code>, <code>error</code>, <code>abort</code>, and <code>timeout</code>.</p>
+
+<h3 id="buffer">The buffer — the part worth stealing</h3>
+
+<pre><code>const _buf = []
+let _ready = false
+function post(data) { _ready ? window.postMessage(data, _origin) : _buf.push(data) }
+
+window.addEventListener('message', (e) => {
+  if (e.data?.type === IS_NET_READY && !_ready) {
+    _ready = true
+    _buf.splice(0).forEach((d) => window.postMessage(d, _origin))
+  }
+})</code></pre>
+
+<p>Requests fire during page load — long before a React panel can mount. Without buffering the
+Network tab would be empty for exactly the requests a developer most wants to see. Events queue
+until the content script announces itself with <code>IS_NET_READY</code>, then drain in order and
+stream live thereafter.</p>
+
+<div class="callout warn">
+  <span class="lbl">Unbounded</span>
+  <code>_buf</code> has no cap. On a page where the panel is never opened, <code>IS_NET_READY</code>
+  never arrives and the buffer grows for the page's lifetime. The interceptor also runs on
+  <em>every</em> page regardless of whether InSpectra is ever used there, and clones every response
+  body to read it — work paid on every site the user visits.
+</div>
+
+<h3 id="initiator">Initiator recovery</h3>
+<p>There's no API for "which line fired this request", so the interceptor throws an
+<code>Error</code> at call time, walks the stack for the first frame that isn't
+<code>chrome-extension://</code>, and reduces it to <code>filename:line</code>. Cheap, and it
+reproduces the most useful column in the DevTools Network panel.</p>
+
+<h2 id="ui">4. Panel &amp; State</h2>
+
+<p>React 18 + Zustand, mounted into an injected root in the isolated world. The store persists to
+<code>chrome.storage.local</code> through a custom adapter wrapping Zustand's
+<code>createJSONStorage</code> — <code>chrome.storage</code> is callback-based and async, so it needs
+promisifying before the middleware can use it.</p>
+
+<p>Persisted: panel position and size, active tab, editor contents, snippets, execution history.
+Ring-buffered: outputs at 200, network requests at 500.</p>
+
+<p>Drag and resize are hand-rolled hooks (<code>useDraggable</code>, <code>useResizable</code>)
+rather than a library — for an extension injected into arbitrary pages, that avoids shipping a
+dependency into every site the user visits.</p>
+
+<h2 id="build">5. Build</h2>
+
+<p>A custom <code>build.js</code> rather than plain Vite config, because MV3 wants several
+independently-bundled entry points — service worker, content script, MAIN-world interceptor — each
+with different output shapes, plus manifest and icon handling. <code>npm run dev</code> watches.</p>
+
+<h2 id="different">6. What I'd Do Differently</h2>
+
+<ol>
+<li><strong>Parse instead of regex-replace.</strong> The <code>let</code>/<code>const</code> rewrite
+is the core of REPL persistence and it operates on text. A tokenizer that understands strings,
+templates and comments would eliminate an entire class of silent corruption. This is the single
+highest-value change available.</li>
+
+<li><strong>Gate the network interceptor on activation.</strong> Patching <code>fetch</code> and
+cloning every response body on every page the user visits is a real cost paid by people who never
+open the panel there. Cap <code>_buf</code> while I'm at it.</li>
+
+<li><strong>Honour <code>isRecording</code> at the source.</strong> The toggle currently filters the
+UI; the interception work happens regardless.</li>
+
+<li><strong>Rename the page-context globals.</strong> <code>window.__qcReplVars</code> is left over
+from when this was QuickConsole. They're visible in the page's global scope, in a tool whose entire
+purpose is inspecting page globals.</li>
+
+<li><strong>Reconcile the two depth caps</strong> — 3 and 5 for the same value is a bug waiting to
+confuse someone.</li>
+
+<li><strong>Test the transform.</strong> There are no tests. The <code>let</code>/<code>const</code>
+rewrite is a pure function with well-understood edge cases — a dozen unit tests would have caught
+the string-literal problem before it shipped.</li>
+</ol>
+
+<div class="callout">
+  <span class="lbl">Calibration</span>
+  The weaknesses here cluster in one place: <strong>source transformation by regex</strong>. Nearly
+  everything else — the CSP diagnosis, the MAIN-world split, origin-scoped <code>postMessage</code>,
+  console restoration timing, the network buffer, path-based cycle detection — was reasoned about
+  carefully and documented in the code at the time. That is a meaningfully different failure profile
+  from "didn't think about it".
+</div>
+
+</div></main>
+</body>
+</html>

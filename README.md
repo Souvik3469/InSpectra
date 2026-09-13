@@ -4,6 +4,18 @@ A floating DevTools panel that lives on top of any webpage. Open it with one cli
 
 ---
 
+## Documentation
+
+| Doc | What's in it |
+|---|---|
+| [`docs/deep-dive.html`](docs/deep-dive.html) | Architecture and internals — the four execution contexts, why `chrome.scripting` replaced script-tag injection, how REPL persistence and top-level `await` actually work, the double serialiser, and the network buffer. Open in a browser. |
+| [`docs/message-protocol.md`](docs/message-protocol.md) | Every message type crossing the four contexts, and the three flows that use them. |
+
+This README covers *what* InSpectra does. Those cover *how*, including where the implementation is
+weak.
+
+---
+
 ## The Problem
 
 Developers constantly context-switch while working on live sites:
