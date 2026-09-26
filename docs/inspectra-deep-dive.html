@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InSpectra — Deep Dive</title>
+<style>
+  :root {
+    --bg:#0f1117; --bg-alt:#161925; --panel:#1a1e2b; --border:#2a2f40;
+    --text:#dbe1ee; --text-dim:#8b93a7; --accent:#7aa2ff; --accent2:#c792ea;
+    --good:#4fd1a5; --warn:#f0b74e; --bad:#ff7a85; --code-bg:#10131c;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --maxw:980px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6}
+  body{display:flex;min-height:100vh}
+  nav.toc{position:sticky;top:0;align-self:flex-start;width:290px;min-width:290px;height:100vh;
+    overflow-y:auto;background:var(--bg-alt);border-right:1px solid var(--border);padding:20px 16px 60px}
+  nav.toc .brand{font-weight:700;font-size:1.1rem;color:var(--accent);margin-bottom:4px}
+  nav.toc .brand-sub{font-size:.78rem;color:var(--text-dim);margin-bottom:18px}
+  nav.toc a{display:block;color:var(--text-dim);text-decoration:none;font-size:.84rem;padding:3px 0 3px 10px;border-left:2px solid transparent}
+  nav.toc a:hover{color:var(--accent);border-left-color:var(--accent)}
+  nav.toc .lvl1{font-weight:700;color:var(--text);margin-top:14px;font-size:.88rem;padding-left:0;border-left:none}
+  nav.toc .lvl1:first-child{margin-top:0}
+  nav.toc .lvl2{padding-left:20px;font-size:.78rem;opacity:.9}
+  main{flex:1;min-width:0;padding:40px clamp(20px,5vw,70px) 120px}
+  .wrap{max-width:var(--maxw);margin:0 auto}
+  h1{font-size:2rem;color:#fff;margin-bottom:.4em}
+  h2{font-size:1.45rem;color:#fff;border-bottom:1px solid var(--border);padding-bottom:10px;margin-top:2.8em;scroll-margin-top:20px}
+  h3{font-size:1.12rem;color:var(--accent);margin-top:2em;scroll-margin-top:20px}
+  h4{font-size:1rem;color:var(--accent2);margin-top:1.6em;margin-bottom:.4em}
+  a{color:var(--accent)}
+  code{font-family:var(--mono);background:var(--code-bg);padding:.1em .4em;border-radius:4px;font-size:.88em;color:#ffd479;border:1px solid var(--border)}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:.84rem}
+  pre code{border:none;background:none;padding:0;color:#cdd6e4}
+  ul,ol{padding-left:1.4em}
+  li{margin-bottom:.35em}
+  table{width:100%;border-collapse:collapse;margin:1em 0 1.6em;font-size:.9rem}
+  th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel);color:#fff}
+  blockquote{border-left:3px solid var(--accent);background:var(--panel);margin:1.3em 0;padding:12px 18px;border-radius:0 6px 6px 0;color:var(--text)}
+  blockquote p{margin:.4em 0}
+  hr{border:none;border-top:1px solid var(--border);margin:2.4em 0}
+  strong{color:#fff}
+  @media(max-width:900px){body{display:block}nav.toc{position:static;width:auto;min-width:0;height:auto;border-right:none;border-bottom:1px solid var(--border)}}
+</style></head><body>
+<nav class="toc"><div class="brand">InSpectra</div><div class="brand-sub">Deep Dive</div>
+<a class="lvl1" href="#1-overview">1. Overview</a>
+<a class="lvl1" href="#2-hld">2. HLD</a>
+<a class="lvl2" href="#21-components">2.1 Components</a>
+<a class="lvl2" href="#22-data-stores">2.2 Data stores</a>
+<a class="lvl2" href="#23-communication">2.3 Communication</a>
+<a class="lvl2" href="#24-diagram">2.4 Diagram</a>
+<a class="lvl2" href="#25-deployment-topology">2.5 Deployment topology</a>
+<a class="lvl1" href="#3-hld-file-wise-flow">3. HLD — file-wise flow</a>
+<a class="lvl2" href="#31-file-map">3.1 File map</a>
+<a class="lvl2" href="#32-flow-a-toggle-the-panel">3.2 Flow A — toggle the panel</a>
+<a class="lvl2" href="#33-flow-b-run-code">3.3 Flow B — run code</a>
+<a class="lvl2" href="#34-flow-c-capture-a-network-request">3.4 Flow C — capture a network request</a>
+<a class="lvl2" href="#35-flow-d-export-requests">3.5 Flow D — export requests</a>
+<a class="lvl1" href="#4-lld">4. LLD</a>
+<a class="lvl2" href="#41-data-model-srcsharedtypests">4.1 Data model (<code>src/shared/types.ts</code>)</a>
+<a class="lvl2" href="#42-store-usepanelstore">4.2 Store (<code>usePanelStore</code>)</a>
+<a class="lvl2" href="#43-state-machines">4.3 State machines</a>
+<a class="lvl2" href="#44-message-protocol">4.4 Message protocol</a>
+<a class="lvl2" href="#45-module-interfaces">4.5 Module interfaces</a>
+<a class="lvl2" href="#46-serialisation-inside-pageexecutor">4.6 Serialisation (inside <code>pageExecutor</code>)</a>
+<a class="lvl2" href="#47-css-isolation">4.7 CSS isolation</a>
+<a class="lvl1" href="#5-lld-function-wise-flow">5. LLD — function-wise flow</a>
+<a class="lvl2" href="#51-run-code">5.1 Run code</a>
+<a class="lvl2" href="#52-clear-repl-state">5.2 Clear REPL state</a>
+<a class="lvl2" href="#53-network-capture">5.3 Network capture</a>
+<a class="lvl2" href="#54-session-restore-apptsx">5.4 Session restore (<code>App.tsx</code>)</a>
+<a class="lvl2" href="#55-export">5.5 Export</a>
+<a class="lvl2" href="#56-history-navigation-useexecutionhistoryts">5.6 History navigation (<code>useExecutionHistory.ts</code>)</a>
+<a class="lvl1" href="#6-dry-runs">6. Dry runs</a>
+<a class="lvl2" href="#61-sync-run-that-creates-a-variable">6.1 Sync run that creates a variable</a>
+<a class="lvl2" href="#62-top-level-await">6.2 Top-level await</a>
+<a class="lvl2" href="#63-clear-repl-state">6.3 Clear REPL state</a>
+<a class="lvl2" href="#64-error-paths-thrown-error-and-timeout">6.4 Error paths — thrown error and timeout</a>
+<a class="lvl2" href="#65-network-buffer-at-load-then-pause-while-in-flight">6.5 Network — buffer at load, then pause while in flight</a>
+<a class="lvl1" href="#7-issues">7. Issues</a>
+<a class="lvl2" href="#71-fixed">7.1 Fixed</a>
+<a class="lvl1" href="#8-design-decisions-and-tradeoffs">8. Design decisions and tradeoffs</a>
+<a class="lvl1" href="#9-security-model">9. Security model</a>
+<a class="lvl1" href="#10-build-and-run">10. Build and run</a>
+</nav><main><div class="wrap">
+<h1>InSpectra — Deep Dive</h1>
+<p>InSpectra was named QuickConsole until commit <code>8f342aa</code>. Same codebase. Page-side globals keep the original <code>__qc</code> prefix.</p>
+<hr>
+<h2 id="1-overview">1. Overview</h2>
+<p><strong>What it is.</strong> A Chrome Manifest V3 (MV3) extension that puts a floating, draggable panel on any <code>http(s)</code> page. The panel has three tabs:</p>
+<ul><li><strong>Console</strong> — a CodeMirror editor. Code runs in the page's own JavaScript realm, so it can read page globals. Declared variables persist between runs, the way DevTools' console behaves.</li><li><strong>Network</strong> — a live list of every <code>fetch</code> and <code>XMLHttpRequest</code> the page makes, with headers, bodies, initiator (<code>file:line</code>), cURL, and JSON or HAR export.</li><li><strong>Snippets</strong> — saved code, with rename, search, JSON import and export.</li></ul>
+<p><strong>Stack.</strong></p>
+<table><tr><th>Layer</th><th>Choice</th></tr>
+<tr><td>Platform</td><td>Chrome MV3 (service worker, content scripts, <code>chrome.scripting</code>)</td></tr>
+<tr><td>UI</td><td>React 18, TypeScript, Tailwind (utilities scoped to <code>#inspectra-root</code>)</td></tr>
+<tr><td>State</td><td>Zustand v5 with <code>persist</code> middleware over <code>chrome.storage.local</code>; per-tab state in <code>sessionStorage</code></td></tr>
+<tr><td>Editor</td><td>CodeMirror 6 via <code>@uiw/react-codemirror</code></td></tr>
+<tr><td>Build</td><td>Custom <code>build.js</code> running three separate Vite library builds (IIFE output)</td></tr>
+</table>
+<p><strong>Scope.</strong> No backend, no accounts, no network calls of its own. Everything runs inside the browser.</p>
+<p><strong>Key term — "world".</strong> A Chrome content script runs in an <em>isolated world</em>: it shares the page's DOM but has its own JavaScript globals. The <em>MAIN world</em> is the page's own realm, where <code>window.fetch</code> and page variables live. InSpectra needs both, which drives the whole design.</p>
+<hr>
+<h2 id="2-hld">2. HLD</h2>
+<h3 id="21-components">2.1 Components</h3>
+<table><tr><th>Component</th><th>Runs in</th><th>Lifetime</th><th>Job</th></tr>
+<tr><td>Service worker (<code>background.js</code>)</td><td>Extension process</td><td>Event-driven; Chrome may stop it when idle</td><td>Handles the toolbar click. Injects <code>pageExecutor</code> into the page with <code>chrome.scripting.executeScript</code>.</td></tr>
+<tr><td>Content script (<code>content.js</code> + <code>panel.css</code>)</td><td>Isolated world, top frame, <code>document_idle</code></td><td>Page lifetime</td><td>Mounts the React panel. Owns the Zustand store. Talks to the service worker and to the MAIN world.</td></tr>
+<tr><td>Network interceptor (<code>network-interceptor.js</code>)</td><td>MAIN world, top frame, <code>document_start</code></td><td>Page lifetime</td><td>Replaces <code>window.fetch</code> and <code>window.XMLHttpRequest</code>. Posts request events to the content script.</td></tr>
+<tr><td><code>pageExecutor</code></td><td>MAIN world</td><td>One execution</td><td>Evaluates the user's code, captures console calls, serialises results, posts them back.</td></tr>
+</table>
+<h3 id="22-data-stores">2.2 Data stores</h3>
+<table><tr><th>Store</th><th>Scope</th><th>Holds</th></tr>
+<tr><td><code>chrome.storage.local</code>, key <code>inspectra-state</code></td><td>Global across all tabs and sites</td><td><code>position</code>, <code>size</code>, <code>isRecording</code>, <code>editorCode</code>, <code>snippets</code>, <code>activeTab</code></td></tr>
+<tr><td><code>window.sessionStorage</code>, key <code>is_session_v1</code></td><td>One tab + one origin</td><td><code>isVisible</code> and up to 200 finished network requests, bodies stripped</td></tr>
+<tr><td>Zustand in-memory store</td><td>One page load</td><td>Everything above plus <code>outputs</code> (max 200), <code>networkRequests</code> (max 500), <code>execHistory</code> (max 50, not persisted)</td></tr>
+<tr><td><code>window.__qcReplVars</code> (page global)</td><td>One page load</td><td>Names of variables created by REPL runs</td></tr>
+</table>
+<h3 id="23-communication">2.3 Communication</h3>
+<table><tr><th>From → To</th><th>Transport</th><th>Why this transport</th></tr>
+<tr><td>Service worker → content script</td><td><code>chrome.tabs.sendMessage</code></td><td>Only extension API that reaches a tab's content script</td></tr>
+<tr><td>Content script → service worker</td><td><code>chrome.runtime.sendMessage</code> with a response callback</td><td>Content scripts cannot call <code>chrome.scripting</code> themselves</td></tr>
+<tr><td>Service worker → MAIN world</td><td><code>chrome.scripting.executeScript({ world: 'MAIN', func, args })</code></td><td>Injected by the browser, so the page's Content-Security-Policy (CSP) does not apply</td></tr>
+<tr><td>MAIN world → content script</td><td><code>window.postMessage(data, window.location.origin)</code></td><td>The two worlds share only the DOM <code>window</code> event channel</td></tr>
+<tr><td>Content script → interceptor</td><td><code>window.postMessage({ type: IS_NET_READY }, origin)</code></td><td>Same reason</td></tr>
+</table>
+<h3 id="24-diagram">2.4 Diagram</h3>
+<pre><code>                    Chrome toolbar click
+                            |
+                            v
++-----------------------------------------------------------+
+| SERVICE WORKER  src/background/index.ts                   |
+|   action.onClicked  -&gt; tabs.sendMessage(MSG_TOGGLE)       |
+|   runtime.onMessage(MSG_EXECUTE)                          |
+|        -&gt; scripting.executeScript(MAIN, pageExecutor)     |
++--------------^------------------------------+-------------+
+   runtime.sendMessage                        | executeScript
+   (MSG_EXECUTE, code, id)                    v
++--------------+--------------------+  +-------------------------------+
+| CONTENT SCRIPT (isolated world)   |  | pageExecutor (MAIN, one run)  |
+|  React panel, Zustand store       |  |  rewrite + (0, eval)(code)    |
+|  chrome.storage.local (global)    |&lt;-+  console capture, serialise   |
+|  sessionStorage (per tab)         |  |  postMessage(MSG_RESULT)      |
++--------------^--------------------+  +-------------------------------+
+               |  window.postMessage (IS_NETWORK)   ^
+               |  window.postMessage (IS_NET_READY) |
++--------------+------------------------------------+-------+
+| NETWORK INTERCEPTOR (MAIN, document_start)                |
+|   window.fetch = isFetch     window.XMLHttpRequest = ISXHR|
+|   _buf queue until IS_NET_READY                           |
++-----------------------------------------------------------+
+                            |
+                  page's real fetch / XHR</code></pre>
+<h3 id="25-deployment-topology">2.5 Deployment topology</h3>
+<ul><li><code>npm run build</code> writes <code>dist/</code> (manifest, three bundles, CSS, icons). The user loads <code>dist/</code> as an unpacked extension.</li><li><code>public/manifest.json</code> declares <code>permissions: storage, activeTab, scripting</code> and <code>host_permissions</code> on all <code>http</code> and <code>https</code> URLs.</li><li>Both content scripts match <code>http://*/*</code> and <code>https://*/*</code>. Neither sets <code>all_frames</code>, so iframes are not instrumented.</li><li><code>npm run dev</code> runs the same three builds in watch mode, unminified, with source maps.</li></ul>
+<hr>
+<h2 id="3-hld-file-wise-flow">3. HLD — file-wise flow</h2>
+<h3 id="31-file-map">3.1 File map</h3>
+<table><tr><th>File / folder</th><th>What it does</th></tr>
+<tr><td><code>public/manifest.json</code></td><td>MV3 manifest. Declares the two content scripts, their worlds and run times, and permissions.</td></tr>
+<tr><td><code>build.js</code></td><td>Three Vite library builds (background, content, interceptor), Tailwind via PostCSS, copies <code>public/</code>, ASCII-escapes content bundles.</td></tr>
+<tr><td><code>src/background/index.ts</code></td><td>Service worker listeners plus <code>pageExecutor</code>, the self-contained function injected into the page.</td></tr>
+<tr><td><code>src/network-interceptor/index.ts</code></td><td>MAIN-world <code>fetch</code> and XHR patching, pre-mount buffer <code>_buf</code>, <code>getInitiator</code>, body and header helpers.</td></tr>
+<tr><td><code>src/shared/constants.ts</code></td><td>Message type strings, DOM ids, storage key, limits.</td></tr>
+<tr><td><code>src/shared/types.ts</code></td><td><code>TreeNode</code>, <code>Snippet</code>, <code>ConsoleOutput</code>, <code>NetworkRequest</code>, <code>ExecutionResult</code>, <code>Position</code>, <code>Size</code>, <code>TabId</code>.</td></tr>
+<tr><td><code>src/content/index.tsx</code></td><td>Creates <code>#inspectra-root</code> on <code>&lt;html&gt;</code> and renders <code>&lt;ErrorBoundary&gt;&lt;App/&gt;&lt;/ErrorBoundary&gt;</code>.</td></tr>
+<tr><td><code>src/content/App.tsx</code></td><td>Restores per-tab session, sends <code>IS_NET_READY</code>, saves session on <code>beforeunload</code>, handles <code>MSG_TOGGLE</code>.</td></tr>
+<tr><td><code>src/content/store/index.ts</code></td><td><code>usePanelStore</code>: all state and actions; <code>chromeStorage</code> adapter; <code>partialize</code> picks persisted keys.</td></tr>
+<tr><td><code>src/content/utils/executor.ts</code></td><td><code>executeCode</code> (id, listener, timeout, send) and <code>clearReplState</code>.</td></tr>
+<tr><td><code>src/content/hooks/useCodeExecution.ts</code></td><td><code>run</code>, <code>clearRepl</code>, <code>applyResult</code> — turns an <code>ExecutionResult</code> into store outputs.</td></tr>
+<tr><td><code>src/content/hooks/useExecutionHistory.ts</code></td><td>Arrow-key history as a CodeMirror keymap.</td></tr>
+<tr><td><code>src/content/hooks/useNetworkMessages.ts</code></td><td>Window listener for <code>IS_NETWORK</code> events; <code>isNetworkEvent</code> type guard; writes to store.</td></tr>
+<tr><td><code>src/content/hooks/useDraggable.ts</code>, <code>useResizable.ts</code></td><td>Hand-rolled drag and resize with document-level mouse listeners.</td></tr>
+<tr><td><code>src/content/components/Panel.tsx</code></td><td>Frame: position, size, minimise, tab routing.</td></tr>
+<tr><td><code>src/content/components/Header.tsx</code></td><td>Logo, tab buttons, minimise and close; drag handle.</td></tr>
+<tr><td><code>src/content/components/ConsoleTab.tsx</code></td><td>Editor, Run/Save toolbar, REPL var badge, output list.</td></tr>
+<tr><td><code>src/content/components/OutputLine.tsx</code>, <code>ObjectTree.tsx</code></td><td>Render one output entry; expandable tree for <code>TreeNode</code> values.</td></tr>
+<tr><td><code>src/content/components/NetworkTab.tsx</code></td><td>Request list, URL and method filters, record toggle, multi-select export.</td></tr>
+<tr><td><code>src/content/components/network/DetailView.tsx</code></td><td>Request / Response / cURL sub-tabs, copy as JSON or HAR.</td></tr>
+<tr><td><code>src/content/components/network/BodyBlock.tsx</code></td><td>Body viewer with JSON pretty-print and in-body search.</td></tr>
+<tr><td><code>src/content/components/SnippetsTab.tsx</code></td><td>Snippet list, rename, delete, search, import, export.</td></tr>
+<tr><td><code>src/content/utils/reportGenerator.ts</code></td><td><code>toCurl</code>, <code>buildReport</code> (custom JSON), <code>buildHar</code> (HAR 1.2), download helpers.</td></tr>
+<tr><td><code>src/content/utils/network.ts</code></td><td>Display helpers: <code>methodColor</code>, <code>statusColor</code>, <code>shortUrl</code>, <code>fmtMs</code>.</td></tr>
+<tr><td><code>src/content/styles/panel.css</code></td><td><code>all: initial</code> reset on the root, scrollbars, a few custom rules.</td></tr>
+</table>
+<h3 id="32-flow-a-toggle-the-panel">3.2 Flow A — toggle the panel</h3>
+<ol><li><code>chrome.action.onClicked</code> in <code>src/background/index.ts</code> — gets the active tab id, sends <code>{ type: MSG_TOGGLE }</code>. Errors are swallowed for pages with no content script.</li><li><code>chrome.runtime.onMessage</code> handler in <code>src/content/App.tsx</code> — matches <code>MSG_TOGGLE</code>, calls <code>toggle()</code>.</li><li><code>toggle</code> in <code>src/content/store/index.ts</code> — flips <code>isVisible</code>.</li><li><code>Panel</code> in <code>src/content/components/Panel.tsx</code> — re-renders; returns <code>null</code> when hidden.</li></ol>
+<h3 id="33-flow-b-run-code">3.3 Flow B — run code</h3>
+<ol><li><code>ConsoleTab.tsx</code> — Run button or Ctrl/Cmd+Enter calls <code>run(resetIndex)</code>.</li><li><code>hooks/useCodeExecution.ts</code> — guards against double runs, adds to history, sets <code>isExecuting</code>.</li><li><code>utils/executor.ts</code> — <code>executeCode</code> mints an id, arms a 10 s timeout, registers a window listener, sends <code>MSG_EXECUTE</code>.</li><li><code>background/index.ts</code> (listener) — reads <code>sender.tab.id</code>, calls <code>chrome.scripting.executeScript</code> in MAIN.</li><li><code>background/index.ts</code> (<code>pageExecutor</code>, now inside the page) — rewrites code, evaluates, captures console, posts <code>MSG_RESULT</code>.</li><li><code>utils/executor.ts</code> — listener matches the id, clears the timeout, resolves the promise.</li><li><code>hooks/useCodeExecution.ts</code> — <code>applyResult</code> adds outputs, return value or error, and updates <code>replVarCount</code>.</li><li><code>store/index.ts</code> → <code>ConsoleTab.tsx</code> → <code>OutputLine.tsx</code> / <code>ObjectTree.tsx</code> — render.</li></ol>
+<h3 id="34-flow-c-capture-a-network-request">3.4 Flow C — capture a network request</h3>
+<ol><li><code>network-interceptor/index.ts</code> — at <code>document_start</code>, wraps <code>window.fetch</code> and <code>XMLHttpRequest</code>.</li><li>Same file, <code>isFetch</code> or <code>ISXHR.send</code> — posts a <code>req</code> event, then a <code>res</code> or <code>err</code> event, through <code>post</code>.</li><li>Same file, <code>post</code> — queues into <code>_buf</code> until ready, else <code>window.postMessage</code>.</li><li><code>content/App.tsx</code> — on mount, posts <code>IS_NET_READY</code>; the interceptor flushes <code>_buf</code> in order.</li><li><code>hooks/useNetworkMessages.ts</code> — validates with <code>isNetworkEvent</code>, drops events if <code>isRecording</code> is false, calls <code>addNetworkRequest</code> or <code>updateNetworkRequest</code>.</li><li><code>components/NetworkTab.tsx</code> → <code>network/DetailView.tsx</code> → <code>network/BodyBlock.tsx</code> — list, detail, body view.</li></ol>
+<h3 id="35-flow-d-export-requests">3.5 Flow D — export requests</h3>
+<ol><li><code>NetworkTab.tsx</code> — checked rows are held in local <code>checkedIds</code> state.</li><li><code>exportSelectedJson</code> or <code>exportSelectedHar</code> — filters <code>networkRequests</code> by <code>checkedIds</code>.</li><li><code>utils/reportGenerator.ts</code> — <code>downloadReport</code> → <code>reportToJson</code> → <code>buildReport</code>, or <code>downloadHar</code> → <code>harToJson</code> → <code>buildHar</code>.</li><li><code>triggerDownload</code> — creates a <code>Blob</code>, an object URL and a temporary <code>&lt;a download&gt;</code>, clicks it, revokes the URL.</li></ol>
+<hr>
+<h2 id="4-lld">4. LLD</h2>
+<h3 id="41-data-model-srcsharedtypests">4.1 Data model (<code>src/shared/types.ts</code>)</h3>
+<p><strong><code>NetworkRequest</code></strong></p>
+<table><tr><th>Field</th><th>Type</th><th>Notes</th></tr>
+<tr><td><code>id</code></td><td>string</td><td><code>isn_&lt;ms&gt;_&lt;counter&gt;</code> from <code>genId()</code> in the interceptor</td></tr>
+<tr><td><code>method</code>, <code>url</code></td><td>string</td><td>Method upper-cased</td></tr>
+<tr><td><code>status</code>, <code>statusText</code></td><td>number, string, optional</td><td>Set on <code>res</code></td></tr>
+<tr><td><code>requestHeaders</code></td><td>Record</td><td>XHR header names lower-cased; fetch headers as given</td></tr>
+<tr><td><code>requestBody</code></td><td>string, optional</td><td>Capped at 50,000 chars (<code>MAX_BODY</code>)</td></tr>
+<tr><td><code>responseHeaders</code>, <code>responseBody</code></td><td>optional</td><td>Body capped at 50,000 chars</td></tr>
+<tr><td><code>duration</code></td><td>number, optional</td><td>ms from <code>Date.now()</code> difference</td></tr>
+<tr><td><code>timestamp</code></td><td>number</td><td>Request start</td></tr>
+<tr><td><code>pending</code></td><td>boolean</td><td><code>true</code> until <code>res</code> or <code>err</code></td></tr>
+<tr><td><code>error</code></td><td>string, optional</td><td>e.g. <code>Request aborted</code>, or <code>String(err)</code> for fetch</td></tr>
+<tr><td><code>initiator</code></td><td>string, optional</td><td><code>filename:line</code> from <code>getInitiator()</code></td></tr>
+</table>
+<p><strong><code>ConsoleOutput</code></strong> — <code>id</code>, <code>type</code> (<code>log</code>, <code>warn</code>, <code>error</code>, <code>info</code>, <code>return</code>, <code>eval-error</code>), <code>values: string[]</code> (flat text), <code>tree?: TreeNode[]</code> (inspector), <code>timestamp</code>.</p>
+<p><strong><code>Snippet</code></strong> — <code>id</code>, <code>name</code>, <code>code</code>, <code>description?</code> (declared, never set by the UI), <code>createdAt</code>, <code>updatedAt</code>.</p>
+<p><strong><code>ExecutionResult</code></strong> — <code>outputs[]</code>, <code>returnValue?</code> (string), <code>returnTree?</code>, <code>error?: { message, stack? }</code>, <code>replVars?: string[]</code>.</p>
+<p><strong><code>TreeNode</code></strong> — a tagged union, tag field <code>k</code>:</p>
+<table><tr><th><code>k</code></th><th>Fields</th><th>Used for</th></tr>
+<tr><td><code>prim</code></td><td><code>v</code></td><td>numbers, booleans, null, undefined, functions, symbols, bigints, RegExp, Date</td></tr>
+<tr><td><code>str</code></td><td><code>v</code> (raw), <code>q</code> (JSON-quoted)</td><td>strings</td></tr>
+<tr><td><code>arr</code></td><td><code>preview</code>, <code>items</code>, <code>extra</code></td><td>arrays; <code>extra</code> = items beyond the 100 cap</td></tr>
+<tr><td><code>obj</code></td><td><code>preview</code>, <code>entries</code>, <code>extra</code></td><td>objects; <code>extra</code> = keys beyond the 50 cap</td></tr>
+<tr><td><code>err</code></td><td><code>msg</code>, <code>stack?</code></td><td><code>Error</code> instances</td></tr>
+<tr><td><code>cut</code></td><td>none</td><td>depth limit (5) or a cycle</td></tr>
+</table>
+<h3 id="42-store-usepanelstore">4.2 Store (<code>usePanelStore</code>)</h3>
+<table><tr><th>Slice</th><th>State</th><th>Actions</th></tr>
+<tr><td>Panel</td><td><code>isVisible</code>, <code>isMinimized</code>, <code>activeTab</code>, <code>position</code>, <code>size</code></td><td><code>toggle</code>, <code>setVisible</code>, <code>setMinimized</code>, <code>setActiveTab</code>, <code>setPosition</code>, <code>setSize</code></td></tr>
+<tr><td>Console</td><td><code>editorCode</code>, <code>outputs</code>, <code>isExecuting</code>, <code>replVarCount</code>, <code>execHistory</code></td><td><code>setEditorCode</code>, <code>addOutput</code> (ring buffer 200), <code>clearOutputs</code>, <code>setExecuting</code>, <code>setReplVarCount</code>, <code>addToHistory</code> (dedupe head, max 50)</td></tr>
+<tr><td>Snippets</td><td><code>snippets</code></td><td><code>addSnippet</code>, <code>updateSnippet</code> (bumps <code>updatedAt</code>), <code>deleteSnippet</code>, <code>loadSnippetToEditor</code> (also switches to Console)</td></tr>
+<tr><td>Network</td><td><code>networkRequests</code>, <code>isRecording</code></td><td><code>addNetworkRequest</code> (ring buffer 500), <code>updateNetworkRequest</code>, <code>clearNetworkRequests</code>, <code>toggleRecording</code></td></tr>
+</table>
+<p>Persistence split:</p>
+<ul><li><code>partialize</code> sends only <code>position</code>, <code>size</code>, <code>isRecording</code>, <code>editorCode</code>, <code>snippets</code>, <code>activeTab</code> to <code>chrome.storage.local</code>. These are user preferences and saved work, shared across all sites.</li><li><code>isVisible</code> and <code>networkRequests</code> are per-tab, saved by <code>App.tsx</code> into <code>sessionStorage</code> on <code>beforeunload</code>. So a reload restores the open panel and recent requests for that tab only.</li><li><code>execHistory</code> and <code>outputs</code> are not persisted.</li><li><code>chromeStorage</code> wraps <code>chrome.storage.local</code> in Promises, because Zustand's <code>createJSONStorage</code> expects a Promise-returning <code>getItem</code>.</li></ul>
+<h3 id="43-state-machines">4.3 State machines</h3>
+<p><strong>Network request row</strong> (<code>pending</code> flag plus <code>error</code>):</p>
+<pre><code>            req event
+   (none) ------------&gt; PENDING
+                          |  \
+               res event  |   \ err event
+                          v    v
+                        DONE   FAILED
+                 (status set)  (error set)</code></pre>
+<p><strong>One execution</strong> (<code>pageExecutor</code> plus <code>executeCode</code>):</p>
+<pre><code> run() --&gt; SENT --executeScript ok--&gt; EVALUATING
+   |         |                           |
+   |         +--sendResponse.error--&gt;  REJECTED (eval-error "Cannot script this page")
+   |                                     |
+   |                  sync result -------+------ thenable result
+   |                       |                          |
+   |                       v                          v
+   |                   finish()                  AWAITING (console still captured)
+   |                       |                          |
+   |                       v                     settle -&gt; finish()
+   |                 MSG_RESULT posted                |
+   |                       |&lt;-------------------------+
+   |                       v
+   +--10 s elapsed--&gt; TIMED OUT (listener removed; late MSG_RESULT ignored)</code></pre>
+<h3 id="44-message-protocol">4.4 Message protocol</h3>
+<p>All type strings live in <code>src/shared/constants.ts</code>.</p>
+<table><tr><th>Constant</th><th>Value</th><th>Direction</th><th>Transport</th><th>Payload</th></tr>
+<tr><td><code>MSG_TOGGLE</code></td><td><code>__IS_TOGGLE__</code></td><td>SW → content</td><td><code>tabs.sendMessage</code></td><td><code>{ type }</code></td></tr>
+<tr><td><code>MSG_EXECUTE</code></td><td><code>__IS_EXECUTE__</code></td><td>content → SW</td><td><code>runtime.sendMessage</code></td><td><code>{ type, code, executionId }</code>; response <code>{}</code> or <code>{ error }</code></td></tr>
+<tr><td><code>MSG_RESULT</code></td><td><code>__IS_RESULT__</code></td><td>MAIN → content</td><td><code>window.postMessage</code></td><td><code>{ type, id, result: ExecutionResult }</code></td></tr>
+<tr><td><code>IS_NETWORK</code></td><td><code>__IS_NETWORK__</code></td><td>interceptor → content</td><td><code>window.postMessage</code></td><td><code>event: 'req'</code>: <code>id, method, url, reqHeaders, reqBody, initiator, ts</code>. <code>event: 'res'</code>: <code>id, status, statusText, resHeaders, resBody, duration</code>. <code>event: 'err'</code>: <code>id, error, duration</code></td></tr>
+<tr><td><code>IS_NET_READY</code></td><td><code>__IS_NET_READY__</code></td><td>content → interceptor</td><td><code>window.postMessage</code></td><td><code>{ type }</code></td></tr>
+<tr><td><code>EXEC_PREFIX</code></td><td><code>__is_exec_</code></td><td>n/a</td><td>n/a</td><td>Execution id prefix: <code>__is_exec_&lt;ms&gt;_&lt;counter&gt;</code></td></tr>
+<tr><td><code>MSG_DEV_RELOAD</code></td><td><code>__IS_DEV_RELOAD__</code></td><td>reserved</td><td>n/a</td><td>No longer sent since dev-reload polling was removed (<code>a47c472</code>)</td></tr>
+</table>
+<p>Limits: <code>EXECUTION_TIMEOUT_MS</code> 10,000; <code>MAX_OUTPUTS</code> 200; <code>MAX_NETWORK_REQUESTS</code> 500; interceptor <code>MAX_BODY</code> 50,000 chars.</p>
+<h3 id="45-module-interfaces">4.5 Module interfaces</h3>
+<table><tr><th>Module</th><th>Export</th><th>Signature</th></tr>
+<tr><td><code>utils/executor.ts</code></td><td><code>executeCode</code></td><td><code>(code: string) =&gt; Promise&lt;ExecutionResult&gt;</code></td></tr>
+<tr><td><code>utils/executor.ts</code></td><td><code>clearReplState</code></td><td><code>() =&gt; Promise&lt;ExecutionResult&gt;</code> — runs a delete script through <code>executeCode</code></td></tr>
+<tr><td><code>hooks/useCodeExecution.ts</code></td><td><code>useCodeExecution</code></td><td><code>() =&gt; { run(onRun?), isExecuting, clearRepl() }</code></td></tr>
+<tr><td><code>hooks/useExecutionHistory.ts</code></td><td><code>useExecutionHistory</code></td><td><code>() =&gt; { historyExtension, handleChange, resetIndex, historyLength }</code></td></tr>
+<tr><td><code>hooks/useNetworkMessages.ts</code></td><td><code>useNetworkMessages</code></td><td><code>() =&gt; void</code> — side-effect hook</td></tr>
+<tr><td><code>hooks/useDraggable.ts</code></td><td><code>useDraggable</code></td><td><code>({ position, onPositionChange, panelWidth }) =&gt; { startDrag }</code></td></tr>
+<tr><td><code>hooks/useResizable.ts</code></td><td><code>useResizable</code></td><td><code>({ size, position, onSizeChange, minWidth?, minHeight? }) =&gt; { startResize(handle) }</code></td></tr>
+<tr><td><code>utils/reportGenerator.ts</code></td><td><code>toCurl</code>, <code>buildReport</code>, <code>buildHar</code>, <code>reportToJson</code>, <code>harToJson</code>, <code>downloadReport</code>, <code>downloadHar</code></td><td>all take <code>NetworkRequest</code> or <code>NetworkRequest[]</code></td></tr>
+<tr><td><code>background/index.ts</code></td><td><code>pageExecutor</code> (not exported; passed as <code>func</code>)</td><td><code>(code, execId, msgType) =&gt; void</code></td></tr>
+</table>
+<h3 id="46-serialisation-inside-pageexecutor">4.6 Serialisation (inside <code>pageExecutor</code>)</h3>
+<p>Values cross <code>postMessage</code> by structured clone, which rejects functions and DOM nodes. So each value is converted twice.</p>
+<table><tr><th></th><th><code>serialize(v, depth)</code></th><th><code>toTree(v, depth, seen)</code></th></tr>
+<tr><td>Output</td><td>flat string</td><td><code>TreeNode</code></td></tr>
+<tr><td>Feeds</td><td><code>ConsoleOutput.values</code></td><td><code>ConsoleOutput.tree</code>, <code>returnTree</code></td></tr>
+<tr><td>Depth cap</td><td>3 (returns <code>[...]</code>)</td><td>5 (returns <code>cut</code>)</td></tr>
+<tr><td>Element cap</td><td>20 array items / 20 keys</td><td>100 items / 50 keys</td></tr>
+<tr><td>Cycles</td><td>stopped only by depth cap</td><td><code>seen</code> is the current ancestor path; push on enter, pop on exit</td></tr>
+<tr><td>Preview</td><td>n/a</td><td>first 3 items via <code>shortVal</code>, e.g. <code>(3) [1, 2, 3]</code></td></tr>
+</table>
+<p>Because <code>seen</code> holds only ancestors and depth stops at 5, the linear scan over <code>seen</code> costs at most 5 comparisons per node. A value repeated in two sibling branches is rendered twice; only a true cycle is cut.</p>
+<h3 id="47-css-isolation">4.7 CSS isolation</h3>
+<ul><li>The panel is not in a Shadow DOM. It is a plain <code>div#inspectra-root</code> appended to <code>&lt;html&gt;</code> (not <code>&lt;body&gt;</code>, so it survives body replacement by SPAs).</li><li><code>tailwind.config.js</code> sets <code>important: "#inspectra-root"</code>, so every utility is prefixed with the root id, which raises its specificity above most page rules. <code>preflight</code> is off, so Tailwind's global reset is not shipped into the page.</li><li><code>panel.css</code> applies <code>all: initial</code> on the root to cut inherited page styles, then a zero-specificity <code>:where(#inspectra-root *)</code> base.</li></ul>
+<hr>
+<h2 id="5-lld-function-wise-flow">5. LLD — function-wise flow</h2>
+<h3 id="51-run-code">5.1 Run code</h3>
+<ol><li><code>run(onRun?)</code> in <code>hooks/useCodeExecution.ts</code>. Input: <code>editorCode</code> from the store. Returns early if <code>isExecuting</code> or the code is blank. Calls <code>addToHistory(editorCode)</code>, then <code>onRun</code> (which is <code>resetIndex</code>, resetting the history cursor), sets <code>isExecuting = true</code>. Awaits <code>executeCode</code>. On reject, adds an <code>eval-error</code> output with the message. Always clears <code>isExecuting</code> in <code>finally</code>.</li><li><code>executeCode(code)</code> in <code>utils/executor.ts</code>. Builds <code>id = EXEC_PREFIX + Date.now() + '_' + counter++</code>. Starts a 10 s <code>setTimeout</code> that removes the listener and rejects with <code>Execution timed out after 10 seconds</code>. Adds <code>onMessage</code> on <code>window</code>, which accepts only <code>type === MSG_RESULT &amp;&amp; id === id</code>. Sends <code>{ type: MSG_EXECUTE, code, executionId: id }</code>. In the response callback: if <code>chrome.runtime.lastError</code> it does nothing (the timeout handles it); if <code>response.error</code> it clears the timer and rejects.</li><li><code>chrome.runtime.onMessage</code> listener in <code>background/index.ts</code>. Ignores other types. Without <code>sender.tab.id</code> it responds <code>{ error: 'No tab ID — cannot inject script' }</code>. Otherwise calls <code>chrome.scripting.executeScript({ target: { tabId }, world: 'MAIN', func: pageExecutor, args: [code, executionId, MSG_RESULT] })</code>. Responds <code>{}</code> on success or <code>{ error: 'Cannot script this page: ...' }</code> on failure. Returns <code>true</code> to keep the response channel open.</li><li><code>pageExecutor(code, execId, msgType)</code> in <code>background/index.ts</code>, now running in the page. It must be self-contained: Chrome serialises the function source, so it cannot use imports or closures. Steps 5 to 10 happen inside it.</li><li>Console hook — saves bound originals of <code>console.log/warn/error/info</code> in <code>orig</code> and replaces them with <code>makeCapture(type)</code>. Each capture pushes <code>{ type, values: serialize(...), tree: toTree(...) }</code> to <code>captured</code>, then forwards to the original.</li><li>Rewrite — <code>replCode = code.replace(/\b(let|const)\b/g, 'var')</code>. A top-level <code>var</code> evaluated by global eval becomes a property of <code>window</code>, so it survives to the next run.</li><li>Snapshot — <code>_before = new Set(Object.keys(window) + existing __qcReplVars)</code>.</li><li>Async wrap — if <code>/\bawait\b/</code> matches: collects names with <code>/\bvar\s+([\w$]+)/g</code>, emits <code>var a; var b;</code> pre-declarations, strips <code>var</code> inside, and wraps the body in <code>(async function(){ ... })()</code>. This keeps <code>await</code> legal while assignments still target globals.</li><li>Evaluate — <code>result = (0, eval)(evalCode)</code>. The comma expression makes this an <em>indirect eval</em>, which always runs in global scope instead of the caller's scope.</li><li>Settle — if <code>result</code> has a callable <code>then</code>, attaches <code>.then</code> / <code>.catch</code> handlers that call <code>finish</code>, and returns; console capture stays active until then. Otherwise calls <code>finish(serialize(result, 0), toTree(result, 0, []), undefined)</code>. A thrown error goes to <code>finish(undefined, undefined, { message, stack })</code>.</li><li><code>finish(rv, rvTree, err)</code> inside <code>pageExecutor</code>. Restores the four console methods. Computes new window keys not in <code>_before</code> (skipping <code>__qc*</code> names) and appends them to <code>window.__qcReplVars</code>. Posts <code>{ type: msgType, id: execId, result: { outputs, returnValue, returnTree, error, replVars } }</code> to <code>window.location.origin</code>, or <code>'*'</code> only when the origin is the string <code>'null'</code> (e.g. <code>file://</code>). Restoration is in <code>finish</code>, not in a <code>finally</code> block, so logs emitted while a returned Promise settles are still captured.</li><li><code>applyResult(result)</code> in <code>hooks/useCodeExecution.ts</code>. Adds one output per captured console call. Then adds either an <code>eval-error</code> (message plus stack) or a <code>return</code> output, skipping a return value of <code>'undefined'</code>. Sets <code>replVarCount = replVars.length</code>.</li></ol>
+<h3 id="52-clear-repl-state">5.2 Clear REPL state</h3>
+<ol><li><code>clearRepl()</code> in <code>useCodeExecution.ts</code> — skips if executing; sets <code>isExecuting</code>; calls <code>clearReplState</code>.</li><li><code>clearReplState()</code> in <code>executor.ts</code> — builds an IIFE that runs <code>delete window[k]</code> for each name in <code>window.__qcReplVars</code>, then sets it to <code>[]</code>. Sends it through <code>executeCode</code>.</li><li>The delete works because bindings created by <code>eval</code> are configurable, unlike <code>var</code> in a normal <code>&lt;script&gt;</code>.</li><li><code>applyResult</code> sets <code>replVarCount</code> to 0 from the returned empty <code>replVars</code>.</li></ol>
+<h3 id="53-network-capture">5.3 Network capture</h3>
+<ol><li>Module top level in <code>network-interceptor/index.ts</code> — defines <code>_buf</code>, <code>_ready</code>, <code>_origin</code>, and a <code>message</code> listener. On the first <code>IS_NET_READY</code> it sets <code>_ready = true</code> and posts every buffered event in order via <code>_buf.splice(0)</code>.</li><li>Guard <code>if (!window.__isNetActive)</code> — prevents wrapping twice if the script is injected again.</li><li><code>isFetch(input, init)</code>. Calls <code>getInitiator()</code>. Normalises <code>url</code>, <code>method</code>, <code>reqHeaders</code> (<code>headersToRecord</code>), <code>reqBody</code> (<code>bodyToStr(init?.body)</code>). Posts <code>req</code>. Awaits the original fetch. Reads <code>resp.clone().text()</code>, capped at <code>MAX_BODY</code>, then posts <code>res</code> and returns the original <code>resp</code>. On a thrown error it posts <code>err</code> and re-throws, so page behaviour on failure is unchanged.</li><li><code>ISXHR</code> (subclass of the original <code>XMLHttpRequest</code>). <code>open</code> records method and URL. <code>setRequestHeader</code> records lower-cased headers. <code>send(body)</code> assigns a new id, start time and initiator, posts <code>req</code>, adds listeners for <code>load</code> (parses <code>getAllResponseHeaders()</code>, reads <code>responseText</code> when it is a string, posts <code>res</code>) and for <code>error</code>, <code>abort</code>, <code>timeout</code> (posts <code>err</code> with a fixed message), then calls <code>super.send</code>.</li><li><code>getInitiator()</code> — creates <code>new Error().stack</code>, skips frames containing <code>chrome-extension://</code>, matches <code>at fn (url:line:col)</code> or <code>at url:line:col</code>, returns <code>lastPathSegment:line</code>.</li><li><code>post(data)</code> — <code>window.postMessage(data, _origin)</code> if ready, else <code>_buf.push(data)</code>.</li><li><code>useNetworkMessages()</code> in the content script — one window listener, re-created when <code>isRecording</code> changes. Drops the event if <code>!isRecording</code> or <code>!isNetworkEvent(data)</code>. <code>isNetworkEvent</code> checks <code>type === IS_NETWORK</code>, <code>event</code> in <code>req/res/err</code>, and <code>id</code> is a string. Then <code>req</code> → <code>addNetworkRequest({ ..., pending: true })</code>; <code>res</code> → <code>updateNetworkRequest(id, { status, ..., pending: false })</code>; <code>err</code> → <code>updateNetworkRequest(id, { error, duration, pending: false })</code>.</li></ol>
+<h3 id="54-session-restore-apptsx">5.4 Session restore (<code>App.tsx</code>)</h3>
+<ol><li>First <code>useEffect</code> — reads <code>sessionStorage['is_session_v1']</code>. If <code>isVisible</code> it calls <code>setVisible(true)</code>. Replays each saved request through <code>addNetworkRequest</code>. Corrupt JSON is ignored.</li><li>Posts <code>IS_NET_READY</code> so the interceptor flushes <code>_buf</code>.</li><li>Registers <code>handleUnload</code> on <code>beforeunload</code>. It saves <code>isVisible</code> and the last 200 non-pending requests mapped through <code>stripBodies</code> (drops both bodies to stay inside the ~5 MB <code>sessionStorage</code> quota).</li></ol>
+<h3 id="55-export">5.5 Export</h3>
+<ol><li><code>buildReport(reqs)</code> — sorts by <code>timestamp</code>, emits <code>{ qcVersion: '1.0', exportedAt, pageUrl, userAgent, requestCount, requests[] }</code>. Each entry has <code>seq</code>, request and response headers and bodies, and <code>curl: toCurl(req)</code>.</li><li><code>buildHar(reqs)</code> — HAR 1.2 <code>log.entries[]</code> with <code>startedDateTime</code>, <code>time</code>, request (headers, <code>queryString</code> from <code>getQueryString</code>, <code>postData</code> with <code>getMimeType</code>), response (<code>content.text</code>), <code>timings.wait = duration</code>. Adds non-standard <code>_initiator</code> and <code>_error</code>.</li><li><code>toCurl(req)</code> — <code>curl -X METHOD 'url'</code>, one <code>-H</code> per header, <code>--data-raw</code> for the body.</li><li><code>triggerDownload(content, filename, mimeType)</code> — Blob, object URL, synthetic click, revoke.</li></ol>
+<h3 id="56-history-navigation-useexecutionhistoryts">5.6 History navigation (<code>useExecutionHistory.ts</code>)</h3>
+<ol><li><code>historyExtension</code> — a CodeMirror <code>keymap</code>. ArrowUp acts only when the cursor is on line 1; ArrowDown only on the last line. Otherwise the key moves the cursor normally.</li><li><code>navigate(dir)</code> — reads <code>execHistory</code> via <code>getState()</code>. Saves the current editor text as a draft on first leave (<code>indexRef === -1</code>). Sets <code>skipNextChangeRef</code> so the resulting <code>onChange</code> is not treated as a manual edit.</li><li><code>handleChange(value)</code> — on a real edit, resets <code>indexRef</code> to -1 and writes <code>editorCode</code>.</li></ol>
+<hr>
+<h2 id="6-dry-runs">6. Dry runs</h2>
+<p>Page for all runs: <code>https://app.example.com/dashboard</code>, so <code>window.location.origin</code> is <code>https://app.example.com</code>.</p>
+<h3 id="61-sync-run-that-creates-a-variable">6.1 Sync run that creates a variable</h3>
+<p>User code:</p>
+<pre><code>const user = { name: 'Alice', roles: ['admin'] }
+user</code></pre>
+<ol><li><code>run</code> → <code>addToHistory</code> → <code>execHistory = ['const user = ...']</code>; <code>isExecuting = true</code>.</li><li><code>executeCode</code> → <code>id = '__is_exec_1727330000000_0'</code>, timer armed, listener added, <code>MSG_EXECUTE</code> sent.</li><li>Service worker → <code>executeScript(tabId 412, MAIN, pageExecutor, [code, id, '__IS_RESULT__'])</code>.</li><li><code>pageExecutor</code>: <code>replCode = "var user = { name: 'Alice', roles: ['admin'] }\nuser"</code>. <code>needsAsync = false</code>. <code>_before</code> has about 300 window keys; <code>user</code> is not among them.</li><li><code>(0, eval)(replCode)</code> → returns the object. <code>window.user</code> now exists.</li><li><code>finish</code>, serialise: <code>serialize</code> → <code>{name: "Alice", roles: ["admin"]}</code>. <code>toTree</code> → <code>{ k: 'obj', preview: '{name: "Alice", roles: Array(1)}', entries: [...], extra: 0 }</code>.</li><li><code>finish</code>, track vars: <code>_newVars = ['user']</code> → <code>window.__qcReplVars = ['user']</code>.</li><li><code>finish</code>, post: <code>{ type: '__IS_RESULT__', id, result: { outputs: [], returnValue: '{name: ...}', returnTree, replVars: ['user'] } }</code> to <code>https://app.example.com</code>.</li><li><code>onMessage</code> matches the id → resolve. <code>applyResult</code> adds one <code>return</code> output. <code>replVarCount = 1</code>. The toolbar shows the <code>1 var</code> badge.</li></ol>
+<h3 id="62-top-level-await">6.2 Top-level await</h3>
+<p>User code:</p>
+<pre><code>const res = await fetch('/api/me')
+const data = await res.json()
+console.log(data.id)</code></pre>
+<ol><li><code>replCode</code> has <code>var res</code>, <code>var data</code>. <code>/\bawait\b/</code> matches.</li><li><code>lifted = ['res', 'data']</code>. <code>evalCode</code>:</li></ol>
+<pre><code>var res; var data;
+(async function(){
+res = await fetch('/api/me')
+data = await res.json()
+console.log(data.id)
+})()</code></pre>
+<ol><li>Eval declares <code>res</code> and <code>data</code> on <code>window</code> and returns a pending Promise. <code>pageExecutor</code> returns; <code>executeScript</code> resolves; the SW responds <code>{}</code>.</li><li>The <code>fetch</code> call goes through <code>isFetch</code> (the interceptor wraps the page's fetch, and user code runs in the page). A <code>req</code> event with id <code>isn_1727330000950_7</code> appears in the Network tab as pending.</li><li>Response <code>200</code>, body <code>{"id":42,"name":"Alice"}</code>. <code>isFetch</code> reads the clone, posts <code>res</code>, returns the response. <code>res.json()</code> resolves.</li><li><code>console.log(42)</code> → captured: <code>{ type: 'log', values: ['42'], tree: [{ k: 'prim', v: '42' }] }</code>.</li><li>The IIFE resolves with <code>undefined</code> → <code>finish('undefined', ...)</code>. <code>_newVars = ['res', 'data']</code> → <code>__qcReplVars = ['user', 'res', 'data']</code>.</li><li><code>applyResult</code> adds the <code>log</code> line. <code>replVarCount = 3</code>.</li></ol>
+<h3 id="63-clear-repl-state">6.3 Clear REPL state</h3>
+<p>State before: <code>window.__qcReplVars = ['user', 'res', 'data']</code>, <code>replVarCount = 3</code>.</p>
+<ol><li>User clicks the <code>3 vars</code> badge → <code>clearRepl()</code> → <code>isExecuting = true</code>.</li><li><code>clearReplState()</code> builds an IIFE that loops over <code>window.__qcReplVars</code> and runs <code>delete window[k]</code>, then sets the list to <code>[]</code>.</li><li>The script goes through <code>executeCode</code> → SW → <code>pageExecutor</code> like any run. <code>needsAsync = false</code>; the loop variable <code>vars</code> is function-scoped, so it creates no new global.</li><li>Each <code>delete</code> succeeds because eval-created bindings are configurable. <code>window.user</code>, <code>window.res</code>, <code>window.data</code> are gone.</li><li><code>finish</code> finds no new keys. It posts <code>replVars: []</code>.</li><li><code>applyResult</code> sets <code>replVarCount = 0</code>; the badge disappears.</li></ol>
+<h3 id="64-error-paths-thrown-error-and-timeout">6.4 Error paths — thrown error and timeout</h3>
+<p><strong>Thrown error.</strong> Code <code>loadWidgets()</code> where no such function exists.</p>
+<ol><li><code>(0, eval)</code> throws <code>ReferenceError: loadWidgets is not defined</code>.</li><li><code>catch</code> → <code>finish(undefined, undefined, { message: 'loadWidgets is not defined', stack: 'ReferenceError: ...' })</code>.</li><li><code>applyResult</code> → one <code>eval-error</code> output with two values: message and stack. The stack renders dimmed under the message.</li></ol>
+<p><strong>Timeout.</strong> Code <code>await new Promise(r =&gt; setTimeout(r, 15000)); 'done'</code>.</p>
+<ol><li>t = 0: wrapped in the async IIFE; the Promise is pending; console methods are replaced.</li><li>t = 10 s: the <code>executeCode</code> timer fires, removes <code>onMessage</code>, rejects. <code>run</code> adds <code>eval-error: Execution timed out after 10 seconds</code>. <code>isExecuting = false</code>.</li><li>t = 15 s: <code>finish</code> restores the console and posts <code>MSG_RESULT</code>. No listener has that id, so the message is ignored.</li></ol>
+<h3 id="65-network-buffer-at-load-then-pause-while-in-flight">6.5 Network — buffer at load, then pause while in flight</h3>
+<ol><li>t = 0 ms, <code>document_start</code>: the interceptor installs. <code>_ready = false</code>.</li><li>t = 40 ms: page calls <code>fetch('/api/config')</code> → <code>req</code> for <code>isn_1727331000040_0</code> → pushed to <code>_buf</code> (length 1).</li><li>t = 110 ms: <code>res</code> with status 200 → <code>_buf</code> length 2.</li><li>t = 600 ms, <code>document_idle</code>: the content script mounts. <code>App</code> restores the session and posts <code>IS_NET_READY</code>.</li><li>The interceptor sets <code>_ready = true</code> and posts both buffered events. <code>useNetworkMessages</code> adds the row as pending, then updates it to <code>status: 200, duration: 70, pending: false</code>.</li><li>t = 5,000 ms: page calls <code>XMLHttpRequest</code> <code>POST /api/report</code> → <code>req</code> for <code>isn_1727331005000_1</code> posted live → row pending.</li><li>t = 5,180 ms: <code>load</code> fires → <code>res</code> posted live → row updated to <code>status: 201, duration: 180, pending: false</code>.</li><li>User clicks the row → <code>DetailView</code> opens on the Response tab; <code>BodyBlock</code> detects JSON and offers <strong>Pretty</strong>.</li></ol>
+<hr>
+<h2 id="7-issues">7. Issues</h2>
+<h3 id="71-fixed">7.1 Fixed</h3>
+<p>Issues found and fixed during development.</p>
+<table><tr><th>#</th><th>Issue</th><th>Where</th><th>Fix</th><th>Commit</th></tr>
+<tr><td>F1</td><td>Code ran through an injected <code>&lt;script&gt;</code> element, which pages with a strict CSP block (most dev servers and hardened apps).</td><td><code>src/content/utils/executor.ts</code>, <code>src/background/index.ts</code></td><td>Moved execution to <code>chrome.scripting.executeScript({ world: 'MAIN' })</code>, which the browser injects outside the page's CSP. Required rewriting the executor as one self-contained function.</td><td>Before the first commit (documented in the <code>executor.ts</code> header comment)</td></tr>
+<tr><td>F2</td><td>Variables did not survive between runs. Code with <code>await</code> was wrapped in an async IIFE, so even <code>var</code> stayed function-scoped.</td><td><code>pageExecutor</code> in <code>src/background/index.ts</code></td><td><code>let</code>/<code>const</code> → <code>var</code> rewrite, indirect eval, lifting of simple <code>var</code> names out of the async wrapper, and tracking in <code>window.__qcReplVars</code> with a clear button.</td><td><code>cc448d9</code></td></tr>
+<tr><td>F3</td><td>Execution results and network events were posted with target origin <code>'*'</code>, so any cross-origin iframe on the page could read them.</td><td><code>finish</code> in <code>pageExecutor</code>; <code>post</code> and the flush in <code>network-interceptor/index.ts</code>; <code>IS_NET_READY</code> in <code>App.tsx</code></td><td>Target <code>window.location.origin</code>; fall back to <code>'*'</code> only when the origin is <code>'null'</code>.</td><td><code>5bcca25</code></td></tr>
+<tr><td>F4</td><td>The network listener trusted any <code>postMessage</code> payload with the right <code>type</code>.</td><td><code>src/content/hooks/useNetworkMessages.ts</code></td><td>Added the <code>isNetworkEvent</code> type guard and typed field access.</td><td><code>5bcca25</code></td></tr>
+<tr><td>F5</td><td>A new CodeMirror <code>extensions</code> array on every render made the editor tear down and rebuild its extension pipeline.</td><td><code>src/content/components/ConsoleTab.tsx</code></td><td>Wrapped the array in <code>useMemo</code>.</td><td><code>5bcca25</code></td></tr>
+<tr><td>F6</td><td>Any render error left a blank, unresponsive overlay on the page.</td><td><code>src/content/index.tsx</code></td><td>Added <code>ErrorBoundary</code> around <code>App</code>.</td><td><code>5bcca25</code></td></tr>
+<tr><td>F7</td><td>A bad snippet import file failed silently.</td><td><code>src/content/components/SnippetsTab.tsx</code></td><td><code>importError</code> state shows a message for 3 s.</td><td><code>5bcca25</code></td></tr>
+<tr><td>F8</td><td>Clipboard write rejections were unhandled.</td><td><code>src/content/components/ui/CopyBtn.tsx</code></td><td>Added <code>.catch</code>.</td><td><code>5bcca25</code></td></tr>
+<tr><td>F9</td><td>Dev auto-reload (content script polling <code>version.txt</code>, SW calling <code>chrome.runtime.reload</code>) was unreliable under MV3. Inline source maps bloated dev bundles.</td><td><code>src/content/utils/devReload.ts</code>, <code>src/background/index.ts</code>, <code>build.js</code></td><td>Removed the polling and the SW reload handler; switched to external source maps.</td><td><code>a47c472</code></td></tr>
+<tr><td>F10</td><td>The release zip could be committed with the source.</td><td><code>.gitignore</code></td><td>Added <code>inspectra.zip</code> to <code>.gitignore</code>.</td><td><code>6c6ab4e</code></td></tr>
+</table>
+<hr>
+<h2 id="8-design-decisions-and-tradeoffs">8. Design decisions and tradeoffs</h2>
+<table><tr><th>Decision</th><th>Why</th><th>Cost</th></tr>
+<tr><td><code>chrome.scripting</code> in MAIN world instead of <code>&lt;script&gt;</code> injection</td><td>Works under strict CSP</td><td><code>pageExecutor</code> must be one self-contained, ES5-style function with inlined serialisers</td></tr>
+<tr><td>Result returned by <code>postMessage</code>, not by <code>executeScript</code>'s return value</td><td><code>executeScript</code> resolves when the function returns, but async code finishes later</td><td>Needs an id-matched listener and a timeout on the content side</td></tr>
+<tr><td>Indirect eval <code>(0, eval)</code></td><td>Forces global scope so <code>var</code> lands on <code>window</code></td><td>REPL variables share the page's global namespace</td></tr>
+<tr><td>Two serialisers</td><td>Flat text for the line, tagged tree for the inspector; the UI never re-walks values</td><td>Two sets of caps to maintain</td></tr>
+<tr><td>Interceptor at <code>document_start</code> with a buffer</td><td>Captures page-load requests before React mounts</td><td>Runs on every matched page</td></tr>
+<tr><td>Initiator from <code>new Error().stack</code></td><td>No extension API reports which line started a request</td><td>Stack capture cost per request</td></tr>
+<tr><td>Global vs per-tab persistence split</td><td>Snippets and layout follow the user; requests and visibility stay with the tab</td><td>Two storage mechanisms to reason about</td></tr>
+<tr><td>Hand-rolled drag and resize</td><td>No extra dependency shipped into every site</td><td>More code to maintain</td></tr>
+<tr><td>Tailwind scoped with <code>important: "#inspectra-root"</code>, no Shadow DOM</td><td>Simple setup; id-level specificity beats most page rules</td><td>Panel DOM lives in the page's document</td></tr>
+<tr><td>Custom <code>build.js</code></td><td>MV3 needs three independent IIFE bundles, manifest copy, CSS processing, and ASCII escaping (a <code>build.js</code> comment notes Chrome's loader wants pure-ASCII content scripts)</td><td>Custom tooling</td></tr>
+</table>
+<hr>
+<h2 id="9-security-model">9. Security model</h2>
+<ul><li><strong>Trust boundary.</strong> The page is untrusted. The user explicitly runs code in it, so results returned from the page are data for display only.</li><li><strong>Result confidentiality.</strong> Results and network events are posted only to the page's own origin (F3), so cross-origin iframes cannot read them.</li><li><strong>Input validation.</strong> Network events pass a shape check (<code>isNetworkEvent</code>) before reaching the store (F4).</li><li><strong>No outbound traffic.</strong> The extension makes no network requests of its own and has no backend.</li><li><strong>Permissions.</strong> <code>storage</code>, <code>activeTab</code>, <code>scripting</code>, and all http(s) hosts. Required for page-context execution and interception on any site.</li></ul>
+<hr>
+<h2 id="10-build-and-run">10. Build and run</h2>
+<table><tr><th>Command</th><th>Effect</th></tr>
+<tr><td><code>npm run build</code></td><td>Clean <code>dist/</code>, three minified IIFE builds, Tailwind CSS, copy <code>public/</code>, ASCII-escape <code>content.js</code> and <code>network-interceptor.js</code></td></tr>
+<tr><td><code>npm run dev</code></td><td>Same builds in watch mode with source maps; reload the extension manually in <code>chrome://extensions</code> after a rebuild</td></tr>
+<tr><td><code>npm run type-check</code></td><td><code>tsc --noEmit</code></td></tr>
+</table>
+<p>Output names are fixed by <code>fileName</code> in each build: <code>background.js</code>, <code>content.js</code>, <code>network-interceptor.js</code>, matching <code>public/manifest.json</code>.</p>
+</div></main></body></html>
